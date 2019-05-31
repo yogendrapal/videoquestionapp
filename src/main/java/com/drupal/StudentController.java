@@ -1,8 +1,8 @@
 package com.drupal;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.drupal.dao.StudentRepo;
 import com.drupal.models.Student;
+import com.drupal.models.StudentHiddenPassword;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Controller
@@ -34,14 +35,23 @@ public class StudentController {
 
 	@RequestMapping(path = "students", method = RequestMethod.GET)
 	@ResponseBody
-	public List<Student> getAllStudents() {
-		return repo.findAll();
+	public List<StudentHiddenPassword> getAllStudents() {
+		List<Student> students= repo.findAll();
+		List<StudentHiddenPassword> studentsHiddenPassword = new ArrayList<StudentHiddenPassword>();
+		for(Student s: students) {
+			studentsHiddenPassword.add(new StudentHiddenPassword(s));
+		}
+		return studentsHiddenPassword;
+		
 	}
 
 	@RequestMapping(path = "students/create", method = RequestMethod.POST)
 	@ResponseBody
 	public Student postStudent(Student student) {
 		System.out.println("inside post");
+		String password = student.getPassword();
+		String encryptedPass = AES.encrypt(password, "This is secret");
+		student.setPassword(encryptedPass);
 		repo.save(student);
 		// return "Home"; This also works
 		return student;
@@ -76,9 +86,17 @@ public class StudentController {
 
 	@RequestMapping(path = "students/{sid}", method = RequestMethod.GET)
 	@ResponseBody
-	public Optional<Student> students(@PathVariable("sid") int sid) {
+	public StudentHiddenPassword students(@PathVariable("sid") int sid) {
 		System.out.println(repo.findById(sid));
-		return repo.findById(sid);
+		Student s = repo.findById(sid).orElse(null);
+		StudentHiddenPassword toReturn = new StudentHiddenPassword(s);
+//		if(s==null) {
+//			return null;
+//		}
+//		else {
+//			s.setPassword(AES.decrypt(s.getPassword(), "This is secret"));
+//		}
+		return toReturn;
 	}
 
 	@DeleteMapping(path = "students/{sid}")
