@@ -5,15 +5,21 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document
 public class Student {
 	@Id
-	private int id;
+	private String id;
 	private String name;
 	private String password;
 	private String email;
 	
-	public int getId() {
+	public Student(String name, String email, String password) {
+		this.name = name;
+		this.email  = email;
+		this.password = password;
+	}
+	
+	public String getId() {
 		return id;
 	}
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 	

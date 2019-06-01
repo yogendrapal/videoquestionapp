@@ -1,4 +1,4 @@
-package com.drupal;
+package com.drupal.controllers;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.drupal.AES;
+import com.drupal.StudentRestApiApplication;
 import com.drupal.dao.StudentRepo;
 import com.drupal.models.Student;
 import com.drupal.models.StudentHiddenPassword;
@@ -47,11 +49,12 @@ public class StudentController {
 
 	@RequestMapping(path = "students/create", method = RequestMethod.POST)
 	@ResponseBody
-	public Student postStudent(Student student) {
+	public Student postStudent(@RequestPart String name, @RequestPart String email, @RequestPart String password) {
 		System.out.println("inside post");
-		String password = student.getPassword();
-		String encryptedPass = AES.encrypt(password, "This is secret");
-		student.setPassword(encryptedPass);
+		String encryptedPass = AES.encrypt(password, StudentRestApiApplication.SECRET_KEY);
+		Student student = new Student(name, email, encryptedPass);
+		System.out.println(student.getId());
+//		student.setPassword(encryptedPass);
 		repo.save(student);
 		// return "Home"; This also works
 		return student;
@@ -86,7 +89,7 @@ public class StudentController {
 
 	@RequestMapping(path = "students/{sid}", method = RequestMethod.GET)
 	@ResponseBody
-	public StudentHiddenPassword students(@PathVariable("sid") int sid) {
+	public StudentHiddenPassword getStudent(@PathVariable("sid") int sid) {
 		System.out.println(repo.findById(sid));
 		Student s = repo.findById(sid).orElse(null);
 		StudentHiddenPassword toReturn = new StudentHiddenPassword(s);
@@ -94,7 +97,7 @@ public class StudentController {
 //			return null;
 //		}
 //		else {
-//			s.setPassword(AES.decrypt(s.getPassword(), "This is secret"));
+//			s.setPassword(AES.decrypt(s.getPassword(), SECRET_KEY));
 //		}
 		return toReturn;
 	}

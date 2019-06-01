@@ -1,4 +1,4 @@
-package com.drupal;
+package com.drupal.controllers;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -22,6 +22,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import com.drupal.FileStorageService;
+import com.drupal.UploadFileResponse;
 
 @Controller
 public class FileController {
