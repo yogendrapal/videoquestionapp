@@ -1,11 +1,11 @@
 package com.drupal.models;
 
-public class StudentHiddenPassword {
+public class UserHiddenPassword {
 	private String id;
 	private String name;
 	private String email;
 
-	public StudentHiddenPassword(Student s) {
+	public UserHiddenPassword(User s) {
 		if (s != null) {
 			this.id = s.getId();
 			this.email = s.getEmail();

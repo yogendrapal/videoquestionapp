@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.drupal.AES;
 import com.drupal.StudentRestApiApplication;
-import com.drupal.dao.StudentRepo;
-import com.drupal.models.Student;
+import com.drupal.dao.UserRepo;
+import com.drupal.models.User;
 import com.drupal.models.Token;
 
 @Controller
@@ -24,17 +24,17 @@ public class ApiController {
 	TokenController tokenController;
 
 	@Autowired
-	StudentController studentController;
+	UserController userController;
 
 	@Autowired
-	StudentRepo studentRepo;
+	UserRepo userRepo;
 
 	@RequestMapping(path = "login", method=RequestMethod.POST)
 	@ResponseBody
 	public String login(@RequestPart String email, @RequestPart String password, HttpServletResponse res) {
-		Student s = studentRepo.findByEmail(email);
-		if (s != null) {
-			if (AES.encrypt(password, StudentRestApiApplication.SECRET_KEY).equals(s.getPassword())) {
+		User user = userRepo.findByEmail(email);
+		if (user != null) {
+			if (AES.encrypt(password, StudentRestApiApplication.SECRET_KEY).equals(user.getPassword())) {
 				Token token = tokenController.createToken(email);
 				return token.getId();
 			} else {
@@ -59,7 +59,7 @@ public class ApiController {
 	@RequestMapping(path="signup", method=RequestMethod.POST)
 	@ResponseBody
 	public String signUp(@RequestPart String email, @RequestPart String password, @RequestPart String name,  HttpServletResponse res) {
-		Student s = studentController.postStudent(name, email, password);
+		User user = userController.postUser(name, email, password);
 		return login(email, password, res);
 	}
 }

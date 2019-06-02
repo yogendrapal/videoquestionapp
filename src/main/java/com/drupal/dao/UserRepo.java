@@ -5,10 +5,10 @@ import java.util.List;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
-import com.drupal.models.Student;
+import com.drupal.models.User;
 
 //@RepositoryRestResource(collectionResourceRel = "students", path="students")
-public interface StudentRepo extends MongoRepository<Student, Integer>{
-	List<Student> findByName(String name);
-	Student findByEmail(String email);
+public interface UserRepo extends MongoRepository<User, String>{
+	List<User> findByName(String name);
+	User findByEmail(String email);
 }

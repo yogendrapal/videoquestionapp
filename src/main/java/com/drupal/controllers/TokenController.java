@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.drupal.StudentRestApiApplication;
 import com.drupal.dao.TokenRepo;
 import com.drupal.models.Token;
 
@@ -25,7 +26,7 @@ public class TokenController {
 	@PostMapping("/tokens/create")
 	@ResponseBody
 	public Token createToken(@RequestPart String email) {
-		Date date = new Date();
+//		Date date = new Date();
 		Token newToken = new Token(email);
 		tokenRepo.save(newToken);
 		return newToken;
@@ -49,9 +50,16 @@ public class TokenController {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
 	}
 
+	public String getEmailFrom(String tokenId) {
+		Token tok = tokenRepo.findById(tokenId).orElse(null);
+		if(tok==null) {
+			return StudentRestApiApplication.NOT_FOUND;
+		}
+		return tok.getEmail();
+	}
+	
 	boolean validateToken(Token token, @NotNull String email) {
 		String tokenEmail = token.getEmail();
 		if (email.equals(tokenEmail)) {
