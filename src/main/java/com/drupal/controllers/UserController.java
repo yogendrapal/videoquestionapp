@@ -3,6 +3,9 @@ package com.drupal.controllers;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -15,7 +18,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.drupal.AES;
 import com.drupal.StudentRestApiApplication;
+import com.drupal.dao.TokenRepo;
 import com.drupal.dao.UserRepo;
+import com.drupal.models.Token;
 import com.drupal.models.User;
 import com.drupal.models.UserHiddenPassword;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,16 +29,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class UserController {
 	@Autowired
 	UserRepo repo;
-
-//	@RequestMapping("getStudent")
-//	public ModelAndView getStudent(@RequestParam int id) {
-//		ModelAndView mv = new ModelAndView("GetStudent");
-//		Student student = repo.findById(id).orElse(new Student());
-//		mv.addObject(student);
-//		System.out.println("Student: "+ student);
-//		System.out.println(repo.findByName("Pratik Gupta"));
-//		return mv;
-//	}
+	
+	@Autowired
+	TokenRepo tokenRepo;
 
 	@RequestMapping(path = "users", method = RequestMethod.GET)
 	@ResponseBody
@@ -54,67 +52,83 @@ public class UserController {
 		String encryptedPass = AES.encrypt(password, StudentRestApiApplication.SECRET_KEY);
 		User user = new User(name, email, encryptedPass);
 		System.out.println(user.getId());
-//		user.setPassword(encryptedPass);
 		repo.save(user);
-		// return "Home"; This also works
 		return user;
 	}
 
 	@RequestMapping(path = "users/update/{id}", method = RequestMethod.PUT, produces = {"appliation/json"})
 	@ResponseBody
-	public String saveOrUpdateUser(@PathVariable("id") String id,  @RequestPart(name="name") String name, @RequestPart String email, @RequestPart String password) {
+	public String saveOrUpdateUser(@PathVariable("id") String id,  @RequestPart(name="name") String name, @RequestPart String email, @RequestPart String password , @RequestPart String tokenId , HttpServletResponse res) {
+		Token token = tokenRepo.findById(tokenId).orElse(null);
+		if(token == null)
+			return "Error";
+		String userId = token.getUserId();
 		User user = repo.findById(id).orElse(null);
 		System.out.println("inside put");
 		if(user==null) {
 			return "{\"Error\":\"User assiciated with the id is not present\"}";
 		}
-		user.setEmail(email);
-		user.setName(name);
-		String encryptedPass = AES.encrypt(password, StudentRestApiApplication.SECRET_KEY);
-		user.setPassword(encryptedPass);
-		repo.save(user);
 		
-		ObjectMapper Obj = new ObjectMapper(); 
-		String jsonStr = user.toString();
-        try { 
-            jsonStr = Obj.writeValueAsString(user); 
-            System.out.println(jsonStr); 
-        } 
-  
-        catch (IOException e) { 
-            e.printStackTrace(); 
-        } 
-		// return "Home"; This also works
-		return jsonStr;
+		if(userId.equals(user.getId())) {
+			user.setEmail(email);
+			user.setName(name);
+			String encryptedPass = AES.encrypt(password, StudentRestApiApplication.SECRET_KEY);
+			user.setPassword(encryptedPass);
+			repo.save(user);
+			
+			ObjectMapper Obj = new ObjectMapper(); 
+			String jsonStr = user.toString();
+	        try { 
+	            jsonStr = Obj.writeValueAsString(user); 
+	            System.out.println(jsonStr); 
+	        } 
+	  
+	        catch (IOException e) { 
+	            e.printStackTrace(); 
+	        } 
+			// return "Home"; This also works
+			return jsonStr;
+		}
+		
+		//System.out.println("Error in updating");
+		return "{\"Error\" : \"You are not allowed do this\"}";
+		
 	}
 
+	
+	//Something Wrong
 	@RequestMapping(path = "users/{id}", method = RequestMethod.GET)
 	@ResponseBody
 	public UserHiddenPassword getUser(@PathVariable("id") String id) {
 		System.out.println(repo.findById(id));
 		User user = repo.findById(id).orElse(null);
 		UserHiddenPassword toReturn = new UserHiddenPassword(user);
-//		if(user==null) {
-//			return null;
-//		}
-//		else {
-//			user.setPassword(AES.decrypt(user.getPassword(), SECRET_KEY));
-//		}
+		if(user==null) {
+			return null;
+		}
 		return toReturn;
 	}
 
 	
 	// TODO token authentication for deletion
-	@DeleteMapping(path = "users/{id}")
+	@DeleteMapping(path = "users/delete/{id}")
 	@ResponseBody
-	public String deleteUser(@PathVariable("id") String id) {
-		System.out.println("deleteing");
+	public String deleteUser(@PathVariable("id") String id ,  @RequestPart String tokenId) {
+		Token token = tokenRepo.findById(tokenId).orElse(null);
+		if(token == null)
+			return "{\"Error\" : \"No such token\"}";
+		String userId = token.getUserId();
 		User user = repo.findById(id).orElse(null);
 		if (user != null) {
-			repo.deleteById(id);
-			return "Deleted";
+			if(userId.equals(user.getId())){
+				repo.deleteById(id);
+				tokenRepo.deleteById(token.getId());
+				return "Deleted";
+			}else {
+				return "{\"Error\" : \"You are not allowed do this\"}";
+			}
 		} else {
-			return ("User not present");
+			return "{\"Error\" : \"User Not Present\"}";
 		}
 	}
 }

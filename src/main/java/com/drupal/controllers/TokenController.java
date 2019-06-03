@@ -25,19 +25,18 @@ public class TokenController {
 
 	@PostMapping("/tokens/create")
 	@ResponseBody
-	public Token createToken(@RequestPart String email) {
-//		Date date = new Date();
-		Token newToken = new Token(email);
+	public Token createToken(@RequestPart String userId) {
+		Token newToken = new Token(userId);
 		tokenRepo.save(newToken);
 		return newToken;
 	}
 
 	@DeleteMapping("/tokens/delete")
 	@ResponseBody
-	public void deleteToken(@RequestPart String id, String email, HttpServletResponse res) {
+	public void deleteToken(@RequestPart String id, String userId, HttpServletResponse res) {
 		try {
 			res.setContentType("application/json");
-			if (!validateToken(id, email)) {
+			if (!validateToken(id, userId)) {
 				res.setStatus(403);
 				res.getWriter().write("{\"Error\":\"Token is invalid\"}");
 			} else {
@@ -57,24 +56,23 @@ public class TokenController {
 		if(tok==null) {
 			return StudentRestApiApplication.NOT_FOUND;
 		}
-		return tok.getEmail();
+		return tok.getUserId();
 	}
 	
 	boolean validateToken(Token token, @NotNull String email) {
-		String tokenEmail = token.getEmail();
+		String tokenEmail = token.getUserId();
 		if (email.equals(tokenEmail)) {
 			return true;
 		}
 		return false;
 	}
 
-	boolean validateToken(@NotNull String tokenId, @NotNull String email) {
+	boolean validateToken(@NotNull String tokenId, @NotNull String userId) {
 		Token token = tokenRepo.findById(tokenId).orElse(null);
 		if (token == null) {
-			System.out.println("validateToken: Token" + tokenId + " is not present");
 			return false;
 		}
-		if (token.getEmail().equals(email)) {
+		if (token.getUserId().equals(userId)) {
 			return true;
 		}
 		return false;

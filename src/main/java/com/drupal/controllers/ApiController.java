@@ -35,8 +35,8 @@ public class ApiController {
 		User user = userRepo.findByEmail(email);
 		if (user != null) {
 			if (AES.encrypt(password, StudentRestApiApplication.SECRET_KEY).equals(user.getPassword())) {
-				Token token = tokenController.createToken(email);
-				return token.getId();
+				Token token = tokenController.createToken(user.getId());
+				return "{\"Token Id\" : \"" + token.getId() + "\"}"; 
 			} else {
 				try {
 					res.sendError(400, "Incorrect password");
@@ -56,10 +56,15 @@ public class ApiController {
 		return null;
 	}
 
-	@RequestMapping(path="signup", method=RequestMethod.POST)
+	@RequestMapping(path="signup", method=RequestMethod.POST , produces = "application/json")
 	@ResponseBody
 	public String signUp(@RequestPart String email, @RequestPart String password, @RequestPart String name,  HttpServletResponse res) {
-		User user = userController.postUser(name, email, password);
-		return login(email, password, res);
+		if(userRepo.findByEmail(email) == null) {
+			User user = userController.postUser(name, email, password);
+			return login(email, password, res);
+		}
+		else {
+			return "{\"Error\" : \"User with this email already exist\"}";
+		}
 	}
 }

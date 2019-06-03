@@ -7,25 +7,29 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Token {
 	@Id
 	String id;
-	String email;
+	String userId;
 
-	public Token(String email) {
-		this.email = email;
-	}
 	
-	public String getEmail() {
-		return email;
-	}
-
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
 
 	@Override
 	public String toString() {
-		return "Token [id=" + id + ", email=" + email + "]";
+		return "Token [id=" + id + ", userId=" + userId + "]";
+	}
+
+
+	public Token(String userId) {
+		super();
+		this.userId = userId;
+	}
+
+
+	public String getUserId() {
+		return userId;
+	}
+
+
+	public void setUserId(String userId) {
+		this.userId = userId;
 	}
 
 
