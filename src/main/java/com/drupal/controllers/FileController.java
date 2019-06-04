@@ -68,7 +68,6 @@ public class FileController {
 			try {
 				res.sendError(400, "Invalid token or expired token..Login again");
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			return null;

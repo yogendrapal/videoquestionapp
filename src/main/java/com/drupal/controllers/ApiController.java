@@ -1,4 +1,4 @@
-package com.drupal.controllers;
+	package com.drupal.controllers;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -63,8 +63,9 @@ public class ApiController {
 				return "";
 			}
 			else if (AES.encrypt(password, StudentRestApiApplication.SECRET_KEY).equals(user.getPassword())) {
+				String name = user.getName();
 				Token token = tokenController.createToken(user.getId());
-				return "{\"Token Id\" : \"" + token.getId() + "\"}"; 
+				return "{\"Token Id\" : \"" + token.getId() + "\",\"Name\":\""+name+"\"}"; 
 			} else {
 				try {
 					res.sendError(403, "Incorrect password");
