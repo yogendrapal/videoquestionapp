@@ -1,11 +1,17 @@
 package com.drupal.controllers;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -14,8 +20,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.drupal.AES;
 import com.drupal.StudentRestApiApplication;
 import com.drupal.dao.UserRepo;
-import com.drupal.models.User;
+import com.drupal.dao.VideoRepo;
 import com.drupal.models.Token;
+import com.drupal.models.User;
+import com.drupal.models.Video;
 
 @Controller
 public class ApiController {
@@ -28,6 +36,12 @@ public class ApiController {
 
 	@Autowired
 	UserRepo userRepo;
+	
+	@Autowired
+	VideoRepo videoRepo;
+	
+	@Autowired
+	FileController fileController;
 
 	@RequestMapping(path = "login", method=RequestMethod.POST)
 	@ResponseBody
@@ -66,5 +80,40 @@ public class ApiController {
 		else {
 			return "{\"Error\" : \"User with this email already exist\"}";
 		}
+	}
+	
+	@RequestMapping(path="videos", method = RequestMethod.GET)
+	@ResponseBody
+	public List<Video> getVideos(@RequestPart String tokenId, HttpServletRequest req,  HttpServletResponse res){
+		String userId = tokenController.getUserIdFrom(tokenId);
+		System.out.println(userId);
+		if(userId.equals(StudentRestApiApplication.NOT_FOUND)) {
+			try {
+				res.sendError(404, "User associated with tokenId not found");
+			} catch (IOException e) {
+				System.out.println("catched");
+				e.printStackTrace();
+			}
+			return null;
+		}
+		List<Video> videos = videoRepo.findByUserId(userId);
+		return videos;
+	}
+	
+	@RequestMapping(path="videos/{id}", method= RequestMethod.GET)
+	@ResponseBody
+	public ResponseEntity<Resource> getVideo(@PathVariable String id, @RequestPart String tokenId, HttpServletRequest req,  HttpServletResponse res){
+		Video v = videoRepo.findById(id).orElse(null);
+		if(v == null) {
+			try {
+				res.sendError(404, "Video not found");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+		String fileName = v.getPath().substring(v.getPath().lastIndexOf('\\')+1, v.getPath().length());
+		return fileController.downloadFile(fileName, req);
+		
 	}
 }

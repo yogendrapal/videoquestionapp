@@ -40,79 +40,73 @@ public class FileController {
 	private static final Logger logger = LoggerFactory.getLogger(FileController.class);
 	@Autowired
 	FileStorageProperties fileStorageProperties;
-	
+
 	@Autowired
-	VideoRepo videoRepo;	
-	
-    @Autowired
-    private FileStorageService fileStorageService;
-    
-    @Autowired 
-    TokenController tokenController;
-    
+	VideoRepo videoRepo;
+
+	@Autowired
+	private FileStorageService fileStorageService;
+
+	@Autowired
+	TokenController tokenController;
+
 	@Autowired
 	UserController userController;
 
 	@Autowired
 	UserRepo userRepo;
-    
-    @PostMapping("/uploadFile")
-    @ResponseBody
-    public UploadFileResponse uploadFile(@RequestParam("video") MultipartFile file, @RequestPart String tokenId, HttpServletResponse res) {
-        String fileName = fileStorageService.storeFile(file);
-        
-        String email  = tokenController.getEmailFrom(tokenId);
-        if(email==StudentRestApiApplication.NOT_FOUND) {
-        	try {
+
+	@PostMapping("/uploadFile")
+	@ResponseBody
+	public UploadFileResponse uploadFile(@RequestParam("video") MultipartFile file, @RequestPart String tokenId, HttpServletResponse res) {
+		String fileName = fileStorageService.storeFile(file);
+
+		String userId = tokenController.getUserIdFrom(tokenId);
+		if (userId == StudentRestApiApplication.NOT_FOUND) {
+			try {
 				res.sendError(400, "Invalid token or expired token..Login again");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-        	return null;
-        }
-        User s = userRepo.findByEmail(email);
-        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/downloadFile/")
-                .path(fileName)
-                .toUriString();
-        System.out.println(s);
-        System.out.println(Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize().resolve(fileName));
-        videoRepo.save(new Video(Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize().resolve(fileName).toString(), s.getId()));
-        
-        return new UploadFileResponse(fileName, fileDownloadUri,
-                file.getContentType(), file.getSize());
-    }
+			return null;
+		}
+		String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/downloadFile/").path(fileName).toUriString();
+		System.out.println(Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize().resolve(fileName));
+		String path = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize().resolve(fileName).toString();
+		Video v = videoRepo.findByPath(path);
+		if (v == null) {
+			videoRepo.save(new Video(path, userId));
+		}
+		return new UploadFileResponse(fileName, fileDownloadUri, file.getContentType(), file.getSize());
+	}
 
-    @PostMapping("/uploadMultipleFiles")
-    public List<UploadFileResponse> uploadMultipleFiles(@RequestParam("files") MultipartFile[] files,  @RequestPart String tokenId, HttpServletResponse res) {
-        return Arrays.asList(files)
-                .stream()
-                .map(file -> uploadFile(file, tokenId, res))
-                .collect(Collectors.toList());
-    }
+	@PostMapping("/uploadMultipleFiles")
+	public List<UploadFileResponse> uploadMultipleFiles(@RequestParam("files") MultipartFile[] files,
+			@RequestPart String tokenId, HttpServletResponse res) {
+		return Arrays.asList(files).stream().map(file -> uploadFile(file, tokenId, res)).collect(Collectors.toList());
+	}
 
-    @GetMapping("/downloadFile/{fileName:.+}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, HttpServletRequest request) {
-        // Load file as Resource
-        Resource resource = fileStorageService.loadFileAsResource(fileName);
+	@GetMapping("/downloadFile/{fileName:.+}")
+	public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, HttpServletRequest request) {
+		// Load file as Resource
+		Resource resource = fileStorageService.loadFileAsResource(fileName);
 
-        // Try to determine file's content type
-        String contentType = null;
-        try {
-            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
-        } catch (IOException ex) {
-            logger.info("Could not determine file type.");
-        }
+		// Try to determine file's content type
+		String contentType = null;
+		try {
+			contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
+		} catch (IOException ex) {
+			logger.info("Could not determine file type.");
+		}
 
-        // Fallback to the default content type if type could not be determined
-        if(contentType == null) {
-            contentType = "application/octet-stream";
-        }
+		// Fallback to the default content type if type could not be determined
+		if (contentType == null) {
+			contentType = "application/octet-stream";
+		}
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                .body(resource);
-    }
+		return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
+				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+				.body(resource);
+	}
 }

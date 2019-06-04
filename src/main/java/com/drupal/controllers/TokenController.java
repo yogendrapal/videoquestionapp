@@ -1,7 +1,6 @@
 package com.drupal.controllers;
 
 import java.io.IOException;
-import java.util.Date;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
@@ -15,13 +14,18 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.drupal.StudentRestApiApplication;
 import com.drupal.dao.TokenRepo;
+import com.drupal.dao.UserRepo;
 import com.drupal.models.Token;
+import com.drupal.models.User;
 
 @Controller
 public class TokenController {
 
 	@Autowired
 	TokenRepo tokenRepo;
+	
+	@Autowired 
+	UserRepo userRepo;
 
 	@PostMapping("/tokens/create")
 	@ResponseBody
@@ -51,7 +55,7 @@ public class TokenController {
 		}
 	}
 
-	public String getEmailFrom(String tokenId) {
+	public String getUserIdFrom(String tokenId) {
 		Token tok = tokenRepo.findById(tokenId).orElse(null);
 		if(tok==null) {
 			return StudentRestApiApplication.NOT_FOUND;
@@ -60,11 +64,8 @@ public class TokenController {
 	}
 	
 	boolean validateToken(Token token, @NotNull String email) {
-		String tokenEmail = token.getUserId();
-		if (email.equals(tokenEmail)) {
-			return true;
-		}
-		return false;
+		String userId = token.getUserId();
+		return validateToken(token.getId(), userId);
 	}
 
 	boolean validateToken(@NotNull String tokenId, @NotNull String userId) {

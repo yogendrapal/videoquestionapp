@@ -48,10 +48,10 @@ public class UserController {
 	@RequestMapping(path = "users/create", method = RequestMethod.POST)
 	@ResponseBody
 	public User postUser(@RequestPart String name, @RequestPart String email, @RequestPart String password) {
-		System.out.println("inside post");
+		System.out.println("inside users post");
 		String encryptedPass = AES.encrypt(password, StudentRestApiApplication.SECRET_KEY);
 		User user = new User(name, email, encryptedPass);
-		System.out.println(user.getId());
+//		System.out.println(user.getId());
 		repo.save(user);
 		return user;
 	}
