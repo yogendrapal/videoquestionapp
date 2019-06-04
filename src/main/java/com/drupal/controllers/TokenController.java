@@ -37,22 +37,15 @@ public class TokenController {
 
 	@DeleteMapping("/tokens/delete")
 	@ResponseBody
-	public void deleteToken(@RequestPart String id, String userId, HttpServletResponse res) {
-		try {
-			res.setContentType("application/json");
-			if (!validateToken(id, userId)) {
-				res.setStatus(403);
-				res.getWriter().write("{\"Error\":\"Token is invalid\"}");
+	public boolean deleteToken(@RequestPart String id, String email) {
+		
+			User user = userRepo.findByEmail(email);
+			if (user == null || !validateToken(id, user.getId())) {
+				return false;
 			} else {
 				tokenRepo.deleteById(id);
-				res.setStatus(200);
-				res.getWriter().write("{\"Success\":\"Token successfully deleted\"}");
+				return true;
 			}
-			res.getWriter().flush();
-			res.getWriter().close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	public String getUserIdFrom(String tokenId) {

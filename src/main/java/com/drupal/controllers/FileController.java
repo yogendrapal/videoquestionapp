@@ -59,6 +59,8 @@ public class FileController {
 	@PostMapping("/uploadFile")
 	@ResponseBody
 	public UploadFileResponse uploadFile(@RequestParam("video") MultipartFile file, @RequestPart String tokenId, HttpServletResponse res) {
+		System.out.println("Uploading");
+		System.out.println(tokenId);
 		String fileName = fileStorageService.storeFile(file);
 
 		String userId = tokenController.getUserIdFrom(tokenId);
@@ -76,6 +78,7 @@ public class FileController {
 		String path = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize().resolve(fileName).toString();
 		Video v = videoRepo.findByPath(path);
 		if (v == null) {
+			System.out.println("Saving");
 			videoRepo.save(new Video(path, userId));
 		}
 		return new UploadFileResponse(fileName, fileDownloadUri, file.getContentType(), file.getSize());

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.drupal.AES;
 import com.drupal.StudentRestApiApplication;
+import com.drupal.dao.TokenRepo;
 import com.drupal.dao.UserRepo;
 import com.drupal.dao.VideoRepo;
 import com.drupal.models.Token;
@@ -30,6 +31,9 @@ public class ApiController {
 
 	@Autowired
 	TokenController tokenController;
+	
+	@Autowired
+	TokenRepo tokenRepo;
 
 	@Autowired
 	UserController userController;
@@ -43,17 +47,27 @@ public class ApiController {
 	@Autowired
 	FileController fileController;
 
-	@RequestMapping(path = "login", method=RequestMethod.POST)
+	@RequestMapping(path = "login", method=RequestMethod.POST , produces = "application/json")
 	@ResponseBody
 	public String login(@RequestPart String email, @RequestPart String password, HttpServletResponse res) {
 		User user = userRepo.findByEmail(email);
 		if (user != null) {
-			if (AES.encrypt(password, StudentRestApiApplication.SECRET_KEY).equals(user.getPassword())) {
+			Token t = tokenRepo.findByUserId(user.getId());
+			if(t != null) {
+				try {
+					res.sendError(400, "User already signed in other device");
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				return "";
+			}
+			else if (AES.encrypt(password, StudentRestApiApplication.SECRET_KEY).equals(user.getPassword())) {
 				Token token = tokenController.createToken(user.getId());
 				return "{\"Token Id\" : \"" + token.getId() + "\"}"; 
 			} else {
 				try {
-					res.sendError(400, "Incorrect password");
+					res.sendError(403, "Incorrect password");
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -98,6 +112,16 @@ public class ApiController {
 		}
 		List<Video> videos = videoRepo.findByUserId(userId);
 		return videos;
+	}
+	
+	@RequestMapping(path = "/logout" , method = RequestMethod.POST , produces = "application/json")
+	@ResponseBody
+	public String loggingOut(@RequestPart String tokenId,@RequestPart String email,HttpServletResponse res) {
+		System.out.println("In Logout");
+		if(tokenController.deleteToken(tokenId, email)) {
+			return "{\"Success\" : \"Successfully Logged Out\"}";
+		}
+		else return "{\"Error\" : \"Cannot Log Out The User\"}";
 	}
 	
 	@RequestMapping(path="videos/{id}", method= RequestMethod.GET)
