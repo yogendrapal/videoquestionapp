@@ -13,6 +13,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import javax.imageio.ImageIO;
+import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.bytedeco.javacv.OpenCVFrameGrabber;
+
 @Service
 public class FileStorageService {
 	private final Path fileStorageLocation;
@@ -45,7 +55,10 @@ public class FileStorageService {
             	System.out.println("File already exists....overwriting");
             }
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-
+            String command = "bash -c ffmpeg -i "+fileName+" -frames:v 1 "+fileName.substring(0, fileName.lastIndexOf('.'))+".bmp";
+            System.out.println(command);
+            String fullLoc = targetLocation.toString();
+            Process p = Runtime.getRuntime().exec(new String[]{"bash","-c","ffmpeg -i "+fullLoc+" -frames:v 1 "+fullLoc.substring(0, fullLoc.lastIndexOf('.'))+".bmp"});
             return fileName;
         } catch (IOException ex) {
             throw new RuntimeException("Could not store file " + fileName + ". Please try again!", ex);
@@ -65,4 +78,17 @@ public class FileStorageService {
             throw new RuntimeException("File not found " + fileName, ex);
         }
     }
+    
+//    public void extractImage() {
+//    	FFmpegFrameGrabber g = new FFmpegFrameGrabber("C:\\JavaEE\\New Project\\tape\\src\\main\\webapp\\web-resources\\videos\\vid.mp4");
+//        g.setFormat("mp4");
+//        g.start();
+//
+//        for (int i = 0 ; i < 50 ; i++) {
+//            ImageIO.write(g.grab()., "png", new File("C:\\JavaEE\\New Project\\tape\\src\\main\\webapp\\web-resources\\thumbnails\\video-frame-" + System.currentTimeMillis() + ".png"));
+//        }
+//
+//         g.stop();
+//
+//    }
 }

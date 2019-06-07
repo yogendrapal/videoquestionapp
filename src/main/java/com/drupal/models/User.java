@@ -1,6 +1,7 @@
 package com.drupal.models;
 
 import org.springframework.data.annotation.Id;
+
 import org.springframework.data.mongodb.core.mapping.Document;
 @Document
 public class User {
@@ -9,11 +10,12 @@ public class User {
 	private String name;
 	private String password;
 	private String email;
-	
+	private boolean isEmailVerified;
 	public User(String name, String email, String password) {
 		this.name = name;
 		this.email  = email;
 		this.password = password;
+		this.isEmailVerified = false;
 	}
 	
 	public String getId() {
@@ -44,6 +46,14 @@ public class User {
 	@Override
 	public String toString() {
 		return "Student [name=" + name + ", password=" + password + ", email=" + email + "]";
+	}
+
+	public boolean isEmailVerified() {
+		return isEmailVerified;
+	}
+
+	public void setEmailVerified(boolean isEmailVerified) {
+		this.isEmailVerified = isEmailVerified;
 	}
 	
 }
