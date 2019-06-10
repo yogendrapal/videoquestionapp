@@ -14,15 +14,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import javax.imageio.ImageIO;
-import org.bytedeco.javacv.FFmpegFrameGrabber;
-import org.bytedeco.javacv.OpenCVFrameGrabber;
-
 @Service
 public class FileStorageService {
 	private final Path fileStorageLocation;

@@ -12,6 +12,7 @@
 	<groupId>com.drupal</groupId>
 	<artifactId>StudentRestApi</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
 	<name>StudentRestApi</name>
 	<description>Api for student part</description>
 
@@ -35,38 +36,46 @@
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-xml -->
+
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-xml</artifactId>
-			<version>2.9.8</version>
 		</dependency>
-		 <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-mail</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-security</artifactId>
-    </dependency>
+
+		<dependency>
+ 	       <groupId>org.springframework.boot</groupId>
+    	   <artifactId>spring-boot-starter-mail</artifactId>
+    	</dependency>
+    	<dependency>
+        	<groupId>org.springframework.boot</groupId>
+        	<artifactId>spring-boot-starter-security</artifactId>
+    	</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/org.bytedeco/javacv -->
-<dependency>
-    <groupId>org.bytedeco</groupId>
-    <artifactId>javacv</artifactId>
-    <version>1.5</version>
-</dependency>
+		<dependency>
+    		<groupId>org.bytedeco</groupId>
+    		<artifactId>javacv</artifactId>
+    		<version>1.5</version>
+		</dependency>
 		
 	</dependencies>
 
 	<build>
+	<finalName>Video-Question-Api</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

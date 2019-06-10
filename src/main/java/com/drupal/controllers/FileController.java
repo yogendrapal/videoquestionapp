@@ -32,7 +32,6 @@ import com.drupal.StudentRestApiApplication;
 import com.drupal.UploadFileResponse;
 import com.drupal.dao.UserRepo;
 import com.drupal.dao.VideoRepo;
-import com.drupal.models.User;
 import com.drupal.models.Video;
 
 @Controller

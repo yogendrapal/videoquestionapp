@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -29,10 +30,14 @@ import com.drupal.dao.UserRepo;
 import com.drupal.dao.VerificationTokenRepo;
 import com.drupal.dao.VideoRepo;
 import com.drupal.events.OnRegistrationSuccessEvent;
+import com.drupal.models.Interests;
 import com.drupal.models.Token;
 import com.drupal.models.User;
 import com.drupal.models.VerificationToken;
 import com.drupal.models.Video;
+
+// TODO return all JSON error responses explicitly (not by res.sendError as it doesn't work on external server(not embedded))
+
 
 @Controller
 public class ApiController {
@@ -112,10 +117,11 @@ public class ApiController {
 
 	@RequestMapping(path = "signup", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public String signUp(@RequestPart String email, @RequestPart String password, @RequestPart String name,
+	public String signUp(@RequestPart String email, @RequestPart String password, @RequestPart String name, @RequestPart String age, @RequestPart String phone, @ModelAttribute Interests interests,
 			HttpServletResponse res) {
+		System.out.println("inside signup");
 		if (userRepo.findByEmail(email) == null) {
-			User user = userController.postUser(name, email, password);
+			User user = userController.postUser(name, email, password, age, phone, interests);
 			eventPublisher.publishEvent(new OnRegistrationSuccessEvent(user.getId()));
 			return "{\"Success\" : \"User created successfully\"}";
 //			return login(email, password, res);
@@ -148,7 +154,7 @@ public class ApiController {
 		return videos;
 	}
 
-	@RequestMapping(path = "/logout", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(path = "logOut", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public String loggingOut(@RequestPart String tokenId, @RequestPart String email, HttpServletResponse res) {
 		System.out.println("In Logout");
@@ -210,7 +216,8 @@ public class ApiController {
 
 	@RequestMapping("sendVerificationMail")
 	@ResponseBody
-	public String sendVerificationMail(@RequestParam String userId) {
+	public String sendVerificationMail(@RequestParam String email) {
+		String userId = userRepo.findByEmail(email).getId();
 		eventPublisher.publishEvent(new OnRegistrationSuccessEvent(userId));
 		return "send verification mail";
 	}

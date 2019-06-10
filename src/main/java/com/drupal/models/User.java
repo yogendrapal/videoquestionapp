@@ -11,13 +11,42 @@ public class User {
 	private String password;
 	private String email;
 	private boolean isEmailVerified;
-	public User(String name, String email, String password) {
-		this.name = name;
-		this.email  = email;
-		this.password = password;
-		this.isEmailVerified = false;
+	private String[] interests;
+	private int age;
+	private String phone;
+	
+	
+	public User() {
 	}
 	
+	public String[] getInterests() {
+		return interests;
+	}
+	public void setInterests(String[] interests) {
+		this.interests = interests;
+	}
+	public int getAge() {
+		return age;
+	}
+	public void setAge(int age) {
+		this.age = age;
+	}
+	public String getPhone() {
+		return phone;
+	}
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+	public User(String name, String email, String password, int age,
+			String phone, String[] interests) {
+		super();
+		this.name = name;
+		this.password = password;
+		this.email = email;
+		this.interests = interests;
+		this.age = age;
+		this.phone = phone;
+	}
 	public String getId() {
 		return id;
 	}

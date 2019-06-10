@@ -3,10 +3,6 @@ package com.drupal.models;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.drupal.UploadFileResponse;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @Document
 public class Video {

@@ -3,13 +3,13 @@ package com.drupal.controllers;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -20,6 +20,7 @@ import com.drupal.AES;
 import com.drupal.StudentRestApiApplication;
 import com.drupal.dao.TokenRepo;
 import com.drupal.dao.UserRepo;
+import com.drupal.models.Interests;
 import com.drupal.models.Token;
 import com.drupal.models.User;
 import com.drupal.models.UserHiddenPassword;
@@ -47,12 +48,13 @@ public class UserController {
 
 	@RequestMapping(path = "users/create", method = RequestMethod.POST)
 	@ResponseBody
-	public User postUser(@RequestPart String name, @RequestPart String email, @RequestPart String password) {
+	public User postUser(@RequestPart String name, @RequestPart String email, @RequestPart String password, @RequestPart String age, @RequestPart String phone, @ModelAttribute Interests interests) {
 		System.out.println("inside users post");
 		String encryptedPass = AES.encrypt(password, StudentRestApiApplication.SECRET_KEY);
-		User user = new User(name, email, encryptedPass);
+		User user = new User(name, email, encryptedPass, Integer.parseInt(age), phone, interests.getInterests());
 //		System.out.println(user.getId());
 		repo.save(user);
+//		return repo.findByEmail(email);
 		return user;
 	}
 
@@ -110,7 +112,6 @@ public class UserController {
 	}
 
 	
-	// TODO token authentication for deletion
 	@DeleteMapping(path = "users/delete/{id}")
 	@ResponseBody
 	public String deleteUser(@PathVariable("id") String id ,  @RequestPart String tokenId) {
