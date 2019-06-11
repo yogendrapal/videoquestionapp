@@ -2,10 +2,12 @@ package com.drupal;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
-@SpringBootApplication
+// Exclude is not necessary here as the default seurity configuration is changed
+@SpringBootApplication (exclude = { SecurityAutoConfiguration.class}) // TODO remove the exclude tag if any error related to security(requests not working (forbidden)) occurs
 public class StudentRestApiApplication extends SpringBootServletInitializer{
 
 	public static final String NOT_FOUND = "NOT FOUND";
