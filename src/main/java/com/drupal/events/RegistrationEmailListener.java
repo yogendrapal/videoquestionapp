@@ -43,8 +43,10 @@ public class RegistrationEmailListener implements ApplicationListener<OnRegistra
 		try {
 			mailSender.send(email);
 		} catch (Exception e) {
+			System.out.println("Email sending failed exception ocured");
+			System.out.println(e.toString());
 			userRepo.deleteById(event.getUserId());
-			verificationTokenRepo.deleteById(tokenId);
+			verificationTokenRepo.delete(verificationTokenRepo.findByToken(tokenId));
 		}
 	}
 }
