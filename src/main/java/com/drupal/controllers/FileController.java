@@ -67,7 +67,7 @@ public class FileController {
 		System.out.println("Uploading");
 		System.out.println(tokenId);
 		String fileName = fileStorageService.storeFile(file);
-
+		System.out.println(fileName);
 		String userId = tokenController.getUserIdFrom(tokenId);
 		if (userId == StudentRestApiApplication.NOT_FOUND) {
 			try {
@@ -109,7 +109,7 @@ public class FileController {
 	public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, HttpServletRequest request) {
 		// Load file as Resource
 		Resource resource = fileStorageService.loadFileAsResource(fileName);
-
+		System.out.println(resource.toString());
 		// Try to determine file's content type
 		String contentType = null;
 		try {

@@ -19,6 +19,8 @@ public class Video {
 		this.tags = tags;
 	}
 	
+	
+	
 	public String getUserId() {
 		return userId;
 	}
