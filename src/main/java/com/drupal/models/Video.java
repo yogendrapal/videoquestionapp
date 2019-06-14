@@ -1,5 +1,7 @@
 package com.drupal.models;
 
+import java.util.List;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -10,9 +12,11 @@ public class Video {
 	String id;
 	String path;
 	String userId;
-	public Video(String path, String userId) {
+	List<String> tags;
+	public Video(String path, String userId, List<String> tags) {
 		this.path = path;
 		this.userId = userId;
+		this.tags = tags;
 	}
 	
 	public String getUserId() {
@@ -38,6 +42,16 @@ public class Video {
 	public void setPath(String path) {
 		this.path = path;
 	}
+
+	public List<String> getTags() {
+		return tags;
+	}
+
+	public void setTags(List<String> tags) {
+		this.tags = tags;
+	}
+
+	
 
 	
 	

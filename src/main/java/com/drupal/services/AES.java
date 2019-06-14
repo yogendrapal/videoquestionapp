@@ -1,4 +1,4 @@
-package com.drupal;
+package com.drupal.services;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;

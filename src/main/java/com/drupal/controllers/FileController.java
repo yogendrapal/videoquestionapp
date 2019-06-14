@@ -18,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,13 +27,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.drupal.FileStorageProperties;
-import com.drupal.FileStorageService;
 import com.drupal.StudentRestApiApplication;
 import com.drupal.UploadFileResponse;
 import com.drupal.dao.UserRepo;
 import com.drupal.dao.VideoRepo;
 import com.drupal.models.Video;
+import com.drupal.models.VideoTags;
+import com.drupal.services.FileStorageProperties;
+import com.drupal.services.FileStorageService;
+import com.drupal.services.VideoTagsFetcherService;
 
 @Controller
 public class FileController {
@@ -40,6 +43,9 @@ public class FileController {
 	@Autowired
 	FileStorageProperties fileStorageProperties;
 
+	@Autowired
+	VideoTagsFetcherService videoTagsFetcherService;
+	
 	@Autowired
 	VideoRepo videoRepo;
 
@@ -57,7 +63,7 @@ public class FileController {
 
 	@PostMapping("/uploadFile")
 	@ResponseBody
-	public UploadFileResponse uploadFile(@RequestParam("video") MultipartFile file, @RequestPart String tokenId, HttpServletResponse res) {
+	public UploadFileResponse uploadFile(@RequestParam("video") MultipartFile file, @RequestPart String tokenId, HttpServletResponse res, @ModelAttribute() VideoTags tags) {
 		System.out.println("Uploading");
 		System.out.println(tokenId);
 		String fileName = fileStorageService.storeFile(file);
@@ -77,7 +83,18 @@ public class FileController {
 		Video v = videoRepo.findByPath(path);
 		if (v == null) {
 			System.out.println("Saving");
-			videoRepo.save(new Video(path, userId));
+			videoRepo.save(new Video(path, userId, tags.getTags()));
+			Thread thread = new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					System.out.println("fetcher thread started");
+					videoTagsFetcherService.fetchDataFor(videoRepo.findByPath(path));
+					System.out.println("fetcher thread finishing");
+				}
+			});
+			thread.start();
+			//videoTagsFetcherService.fetchDataFor(videoRepo.findByPath(path));
 		}
 		return new UploadFileResponse(fileName, fileDownloadUri, file.getContentType(), file.getSize());
 	}
@@ -85,7 +102,7 @@ public class FileController {
 	@PostMapping("/uploadMultipleFiles")
 	public List<UploadFileResponse> uploadMultipleFiles(@RequestParam("files") MultipartFile[] files,
 			@RequestPart String tokenId, HttpServletResponse res) {
-		return Arrays.asList(files).stream().map(file -> uploadFile(file, tokenId, res)).collect(Collectors.toList());
+		return Arrays.asList(files).stream().map(file -> uploadFile(file, tokenId, res, null)).collect(Collectors.toList());
 	}
 
 	@GetMapping("/downloadFile/{fileName:.+}")

@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.drupal.AES;
 import com.drupal.StudentRestApiApplication;
 import com.drupal.dao.TokenRepo;
 import com.drupal.dao.UserRepo;
@@ -24,6 +23,7 @@ import com.drupal.models.Interests;
 import com.drupal.models.Token;
 import com.drupal.models.User;
 import com.drupal.models.UserHiddenPassword;
+import com.drupal.services.AES;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Controller

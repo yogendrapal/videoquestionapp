@@ -1,4 +1,4 @@
-package com.drupal;
+package com.drupal.services;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

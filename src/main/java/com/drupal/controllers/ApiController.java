@@ -22,8 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.drupal.AES;
-import com.drupal.EmailSenderService;
 import com.drupal.StudentRestApiApplication;
 import com.drupal.dao.TokenRepo;
 import com.drupal.dao.UserRepo;
@@ -35,6 +33,8 @@ import com.drupal.models.Token;
 import com.drupal.models.User;
 import com.drupal.models.VerificationToken;
 import com.drupal.models.Video;
+import com.drupal.services.AES;
+import com.drupal.services.EmailSenderService;
 
 // TODO return all JSON error responses explicitly (not by res.sendError as it doesn't work on external server(not embedded))
 
