@@ -10,10 +10,22 @@ public class Video {
 	String id;
 	String path;
 	String userId;
+	String tags[] = {"Politics"};
+	
+	public String[] getTags() {
+		return tags;
+	}
+
+	public void setTags(String[] tags) {
+		this.tags = tags;
+	}
+
 	public Video(String path, String userId) {
 		this.path = path;
 		this.userId = userId;
 	}
+	
+	
 	
 	public String getUserId() {
 		return userId;

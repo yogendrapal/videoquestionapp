@@ -1,15 +1,23 @@
 package com.drupal.controllers;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.apache.tomcat.util.http.parser.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
@@ -182,23 +190,7 @@ public class ApiController {
 
 	}
 
-	@RequestMapping(path = "videos/thumbnail/{id}", method = RequestMethod.GET)
-	@ResponseBody
-	public ResponseEntity<Resource> getVideoThumbnail(@PathVariable String id, @RequestPart String tokenId,
-			HttpServletRequest req, HttpServletResponse res) {
-		Video v = videoRepo.findById(id).orElse(null);
-		if (v == null) {
-			try {
-				res.sendError(404, "Video not found");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			return null;
-		}
-		String fileName = v.getPath().substring(v.getPath().lastIndexOf('\\') + 1, v.getPath().length());
-		String thumbName = fileName.substring(0, fileName.lastIndexOf('.')) + ".bmp";
-		return fileController.downloadFile(thumbName, req);
-	}
+
 
 	@RequestMapping("sendMail")
 	@ResponseBody
@@ -262,4 +254,57 @@ public class ApiController {
 		return token;
 
 	}
+	
+	
+	@RequestMapping(path = "/getVideo/{id}", method = RequestMethod.GET)
+	@ResponseBody public File getPreview2(@PathVariable("id") String id, HttpServletResponse response) {
+	    try {
+	    	System.out.println("HHHHHHHHHHHHHHHHHHHHHHHHHH");
+	    	Video v = videoRepo.findById(id).orElse(null);
+	    	if(v != null) {
+	    		
+	    		String path = v.getPath();
+		        System.out.println(path);
+		        File file = new File(path);
+		        System.out.println("SSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
+		        response.setContentType("video/mp4");
+		        response.setHeader("Content-Disposition", "attachment; filename="+file.getName().replace(" ", "_"));
+		        InputStream iStream = new FileInputStream(file);
+		        IOUtils.copy(iStream, response.getOutputStream());
+//		        response.flushBuffer();
+		        return file;
+	    	}
+	    } catch (Exception e) {
+	        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+	    }
+		return null;
+	}
+	
+	@RequestMapping(path = "/getQuestions", method = RequestMethod.GET)
+	@ResponseBody
+	public List<String> getAllQuestions(@RequestParam String tokenId){
+		List<String> result = new ArrayList<String>();
+		Token t = tokenRepo.findById(tokenId).orElse(null);
+		String uid = t.getUserId();
+		User u = userRepo.findById(uid).orElse(null);
+		String[] interests = u.getInterests();
+		List<Video> videos = videoRepo.findAll();
+		int vidLen = videos.size();
+		int len = interests.length;
+		for(int i = 0 ; i < len ; i++) {
+			String cur = interests[i];
+			for(int j = 0 ; j < vidLen ; j++) {
+				Video v = videos.get(j); 
+				String tags[] = v.getTags();
+				if(Arrays.asList(tags).contains(cur)) {
+					if(!result.contains(v.getId()) && !v.getUserId().equals(uid) ) {
+						System.out.println(v.getId());
+						result.add(v.getPath());
+					}
+				}
+			}
+		}
+		return result;
+	}
+	
 }

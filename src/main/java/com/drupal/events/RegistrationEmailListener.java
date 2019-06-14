@@ -39,7 +39,7 @@ public class RegistrationEmailListener implements ApplicationListener<OnRegistra
 		SimpleMailMessage email = new SimpleMailMessage();
 		email.setTo(userRepo.findById(event.getUserId()).orElse(null).getEmail());
 		email.setSubject("Confirm registration to videoquestion app");
-		email.setText(message + "http://192.168.43.244:8080/confirmtoken?token=" + tokenId + trailingMessage);
+		email.setText(message + "http://192.168.43.27:8080/confirmtoken?token=" + tokenId + trailingMessage);
 		try {
 			mailSender.send(email);
 		} catch (Exception e) {

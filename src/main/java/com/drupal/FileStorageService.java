@@ -33,7 +33,6 @@ public class FileStorageService {
     public String storeFile(MultipartFile file) {
         // Normalize file name
         String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-
         try {
             // Check if the file's name contains invalid characters
             if(fileName.contains("..")) {
@@ -42,14 +41,11 @@ public class FileStorageService {
 
             // Copy file to the target location (Replacing existing file with the same name)
             Path targetLocation = this.fileStorageLocation.resolve(fileName);
+            System.out.println(targetLocation.toString());
             if(targetLocation.toFile().exists()) {
             	System.out.println("File already exists....overwriting");
             }
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-            String command = "bash -c ffmpeg -i "+fileName+" -frames:v 1 "+fileName.substring(0, fileName.lastIndexOf('.'))+".bmp";
-            System.out.println(command);
-            String fullLoc = targetLocation.toString();
-            Process p = Runtime.getRuntime().exec(new String[]{"bash","-c","ffmpeg -i "+fullLoc+" -frames:v 1 "+fullLoc.substring(0, fullLoc.lastIndexOf('.'))+".bmp"});
             return fileName;
         } catch (IOException ex) {
             throw new RuntimeException("Could not store file " + fileName + ". Please try again!", ex);
@@ -59,6 +55,7 @@ public class FileStorageService {
     public Resource loadFileAsResource(String fileName) {
         try {
             Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+            System.out.println(filePath.toString());
             Resource resource = new UrlResource(filePath.toUri());
             if(resource.exists()) {
                 return resource;
