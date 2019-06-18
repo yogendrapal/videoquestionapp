@@ -13,14 +13,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.tomcat.util.http.fileupload.IOUtils;
-import org.apache.tomcat.util.http.parser.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,11 +30,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.drupal.AES;
 import com.drupal.EmailSenderService;
 import com.drupal.StudentRestApiApplication;
+import com.drupal.dao.InstituteRepo;
 import com.drupal.dao.TokenRepo;
 import com.drupal.dao.UserRepo;
 import com.drupal.dao.VerificationTokenRepo;
 import com.drupal.dao.VideoRepo;
 import com.drupal.events.OnRegistrationSuccessEvent;
+import com.drupal.models.Institute;
 import com.drupal.models.Interests;
 import com.drupal.models.Token;
 import com.drupal.models.User;
@@ -50,6 +49,9 @@ import com.drupal.models.Video;
 @Controller
 public class ApiController {
 
+	@Autowired
+	InstituteRepo instituteRepo;
+	
 	@Autowired
 	VerificationTokenRepo verificationTokenRepo;
 
@@ -81,37 +83,73 @@ public class ApiController {
 	@ResponseBody
 	public String login(@RequestPart String email, @RequestPart String password, HttpServletResponse res) {
 		User user = userRepo.findByEmail(email);
-		if (user != null) {
-			if (user.isEmailVerified()) {
-				Token t = tokenRepo.findByUserId(user.getId());
-				if (t != null) {
+		Institute inst = instituteRepo.findByEmail(email);
+		if (user != null ||  inst!=null) {
+			if(user!=null && inst==null) {
+				if (user.isEmailVerified()) {
+					Token t = tokenRepo.findByUserId(user.getId());
+					if (t != null) {
+						try {
+							res.sendError(400, "User already signed in other device");
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						return "";
+					} else if (AES.encrypt(password, StudentRestApiApplication.SECRET_KEY).equals(user.getPassword())) {
+						String name = user.getName();
+						Token token = tokenController.createToken(user.getId());
+						return "{\"Token Id\" : \"" + token.getId() + "\",\"Name\":\"" + name + "\"}";
+					} else {
+						try {
+							res.sendError(403, "Incorrect password");
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+						return "Incorrect password";
+					}
+				} else {
 					try {
-						res.sendError(400, "User already signed in other device");
+						res.sendError(403, "Email not verified");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					return "";
-				} else if (AES.encrypt(password, StudentRestApiApplication.SECRET_KEY).equals(user.getPassword())) {
-					String name = user.getName();
-					Token token = tokenController.createToken(user.getId());
-					return "{\"Token Id\" : \"" + token.getId() + "\",\"Name\":\"" + name + "\"}";
+				}
+			}else if(user==null && inst!=null) {
+				if (inst.isEmailVerified()) {
+					Token t = tokenRepo.findByUserId(inst.getId());
+					if (t != null) {
+						try {
+							res.sendError(400, "User already signed in other device");
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						return "";
+					} else if (AES.encrypt(password, StudentRestApiApplication.SECRET_KEY).equals(inst.getPassword())) {
+						String name = inst.getName();
+						Token token = tokenController.createToken(inst.getId());
+						return "{\"Token Id\" : \"" + token.getId() + "\",\"Name\":\"" + name + "\"}";
+					} else {
+						try {
+							res.sendError(403, "Incorrect password");
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+						return "Incorrect password";
+					}
 				} else {
 					try {
-						res.sendError(403, "Incorrect password");
+						res.sendError(403, "Email not verified");
 					} catch (IOException e) {
+						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					return "Incorrect password";
-				}
-			} else {
-				try {
-					res.sendError(403, "Email not verified");
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
 			}
+			
+			
 
 		} else {
 			try {
@@ -130,7 +168,7 @@ public class ApiController {
 		System.out.println("inside signup");
 		if (userRepo.findByEmail(email) == null) {
 			User user = userController.postUser(name, email, password, age, phone, interests);
-			eventPublisher.publishEvent(new OnRegistrationSuccessEvent(user.getId()));
+			eventPublisher.publishEvent(new OnRegistrationSuccessEvent(user.getId(),StudentRestApiApplication.RegistrationTypes.user));
 			return "{\"Success\" : \"User created successfully\"}";
 //			return login(email, password, res);
 		} else {
@@ -192,31 +230,18 @@ public class ApiController {
 
 
 
-	@RequestMapping("sendMail")
-	@ResponseBody
-	public String sendMail() throws MailException {
-		SimpleMailMessage mailMessage = new SimpleMailMessage();
-		mailMessage.setTo("pratik17100@iiitnr.edu.in");
-		mailMessage.setSubject("Complete Registration!");
-		mailMessage.setFrom("prateek.pratik.gupta@gmail.com");
-		mailMessage.setText("To confirm your account, please click here : "
-				+ "http://localhost:8082/confirm-account?token=" + "1234");
-
-		emailSenderService.sendEmail(mailMessage);
-		return "successfully sent";
-	}
 
 	@RequestMapping("sendVerificationMail")
 	@ResponseBody
 	public String sendVerificationMail(@RequestParam String email) {
 		String userId = userRepo.findByEmail(email).getId();
-		eventPublisher.publishEvent(new OnRegistrationSuccessEvent(userId));
+		eventPublisher.publishEvent(new OnRegistrationSuccessEvent(userId,StudentRestApiApplication.RegistrationTypes.user));
 		return "send verification mail";
 	}
 
 	@RequestMapping(path="confirmtoken", method=RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public String confirmToken(@RequestParam String token, HttpServletResponse res) throws IOException {
+	public String confirmToken(@RequestParam String type, @RequestParam String token, HttpServletResponse res) throws IOException {
 		System.out.println("inside confirm token "+token);
 		VerificationToken vToken = verificationTokenRepo.findByToken(token);
 		if (vToken == null) {
@@ -231,17 +256,31 @@ public class ApiController {
 			Date expiryDate = vToken.getExpiryDate();
 			if (curDate.before(expiryDate)) {
 				String userId = vToken.getUserId();
-				User user = userRepo.findById(userId).orElse(null);
-				if (user == null) {
-					try {
-						res.sendError(400, "User account was deleted");
-					} catch (IOException e) {
-						e.printStackTrace();
+				
+				if(type == StudentRestApiApplication.RegistrationTypes.user.toString()) {
+					User user = userRepo.findById(userId).orElse(null);
+					if (user == null) {
+						try {
+							res.sendError(400, "User account was deleted");
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 					}
+					user.setEmailVerified(true);
+					userRepo.save(user);
 				}
-
-				user.setEmailVerified(true);
-				userRepo.save(user);
+				else {
+					Institute ins = instituteRepo.findById(userId).orElse(null);
+					if (ins == null) {
+						try {
+							res.sendError(400, "User account was deleted");
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+					ins.setEmailVerified(true);
+					instituteRepo.save(ins);
+				}
 				verificationTokenRepo.delete(vToken);
 				return "{\"Success\":\"Email successfully verified\"}";
 			}

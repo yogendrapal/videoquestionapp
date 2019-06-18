@@ -58,43 +58,42 @@ public class UserController {
 		return user;
 	}
 
-	@RequestMapping(path = "users/update/{id}", method = RequestMethod.PUT, produces = {"appliation/json"})
 	@ResponseBody
-	public String saveOrUpdateUser(@PathVariable("id") String id,  @RequestPart(name="name") String name, @RequestPart String email, @RequestPart String password , @RequestPart String tokenId , HttpServletResponse res) {
-		Token token = tokenRepo.findById(tokenId).orElse(null);
-		if(token == null)
-			return "Error";
-		String userId = token.getUserId();
-		User user = repo.findById(id).orElse(null);
-		System.out.println("inside put");
-		if(user==null) {
-			return "{\"Error\":\"User assiciated with the id is not present\"}";
-		}
-		
-		if(userId.equals(user.getId())) {
-			user.setEmail(email);
-			user.setName(name);
-			String encryptedPass = AES.encrypt(password, StudentRestApiApplication.SECRET_KEY);
-			user.setPassword(encryptedPass);
-			repo.save(user);
-			
-			ObjectMapper Obj = new ObjectMapper(); 
-			String jsonStr = user.toString();
-	        try { 
-	            jsonStr = Obj.writeValueAsString(user); 
-	            System.out.println(jsonStr); 
-	        } 
-	  
-	        catch (IOException e) { 
-	            e.printStackTrace(); 
-	        } 
-			// return "Home"; This also works
-			return jsonStr;
-		}
-		
-		//System.out.println("Error in updating");
-		return "{\"Error\" : \"You are not allowed do this\"}";
-		
+	@RequestMapping(path = "users/updateinfo", method = RequestMethod.PUT, produces = {"appliation/json"})
+	public String saveOrUpdateUser(@RequestPart String name,@RequestPart String age, @RequestPart String phone , @RequestPart String tokenId , HttpServletResponse res) {
+	Token token = tokenRepo.findById(tokenId).orElse(null);
+	if(token == null)
+	return "Error";
+	String userId = token.getUserId();
+	User user = repo.findById(userId).orElse(null);
+	System.out.println("inside put");
+	if(user==null) {
+	return "{\"Error\":\"User assiciated with the id is not present\"}";
+	}
+
+	if(userId.equals(user.getId())) {
+	user.setName(name);
+	user.setAge(Integer.valueOf(age));
+	user.setPhone(phone);
+	repo.save(user);
+
+	ObjectMapper Obj = new ObjectMapper(); 
+	String jsonStr = user.toString();
+	       try { 
+	           jsonStr = Obj.writeValueAsString(user); 
+	           System.out.println(jsonStr); 
+	       } 
+	 
+	       catch (IOException e) { 
+	           e.printStackTrace(); 
+	       } 
+	// return "Home"; This also works
+	return jsonStr;
+	}
+
+	//System.out.println("Error in updating");
+	return "{\"Error\" : \"You are not allowed do this\"}";
+
 	}
 
 	

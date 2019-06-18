@@ -8,6 +8,8 @@ import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Component;
 
+import com.drupal.StudentRestApiApplication;
+import com.drupal.dao.InstituteRepo;
 import com.drupal.dao.UserRepo;
 import com.drupal.dao.VerificationTokenRepo;
 import com.drupal.models.VerificationToken;
@@ -23,6 +25,9 @@ public class RegistrationEmailListener implements ApplicationListener<OnRegistra
 
 	@Autowired
 	UserRepo userRepo;
+	
+	@Autowired
+	InstituteRepo instituteRepo;
 
 	@Override
 	public void onApplicationEvent(OnRegistrationSuccessEvent event) {
@@ -37,9 +42,18 @@ public class RegistrationEmailListener implements ApplicationListener<OnRegistra
 		String message = "Click on this link to confirm your registration:\n";
 		String trailingMessage = " \nThe link will expire after 24 hours";
 		SimpleMailMessage email = new SimpleMailMessage();
-		email.setTo(userRepo.findById(event.getUserId()).orElse(null).getEmail());
+		System.out.println(email.toString());
+		if(event.type == StudentRestApiApplication.RegistrationTypes.user ) {
+			email.setTo(userRepo.findById(event.getUserId()).orElse(null).getEmail());
+		}
+		else {
+		
+			email.setTo(instituteRepo.findById(event.getUserId()).orElse(null).getEmail());	
+		}
+		System.out.println("AFTER INSTITUTE WAS FOUND");
+		System.out.println(email.toString());
 		email.setSubject("Confirm registration to videoquestion app");
-		email.setText(message + "http://192.168.43.27:8080/confirmtoken?token=" + tokenId + trailingMessage);
+		email.setText(message + "http://192.168.43.27:8080/confirmtoken?type="+event.type+"&token=" + tokenId + trailingMessage);
 		try {
 			mailSender.send(email);
 		} catch (Exception e) {
