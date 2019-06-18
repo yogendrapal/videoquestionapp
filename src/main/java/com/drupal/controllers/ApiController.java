@@ -19,6 +19,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,7 +28,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.drupal.StudentRestApiApplication;
 import com.drupal.dao.InstituteRepo;
@@ -173,7 +173,7 @@ public class ApiController {
 		if (userRepo.findByEmail(email) == null) {
 			User user = userController.postUser(name, email, password, age, phone, interests);
 			try {
-			eventPublisher.publishEvent(new OnRegistrationSuccessEvent(user.getId()));
+			eventPublisher.publishEvent(new OnRegistrationSuccessEvent(user.getId(), StudentRestApiApplication.RegistrationTypes.user));
 			}
 			catch(MailException e) {
 				try {
@@ -249,8 +249,17 @@ public class ApiController {
 	@RequestMapping("sendVerificationMail")
 	@ResponseBody
 	public String sendVerificationMail(@RequestParam String email) {
-		String userId = userRepo.findByEmail(email).getId();
-		eventPublisher.publishEvent(new OnRegistrationSuccessEvent(userId,StudentRestApiApplication.RegistrationTypes.user));
+		User user = userRepo.findByEmail(email);
+		String id ;
+		if(user!=null) {
+		id= userRepo.findByEmail(email).getId();
+		eventPublisher.publishEvent(new OnRegistrationSuccessEvent(id,StudentRestApiApplication.RegistrationTypes.user));
+		}
+		else {
+			id = instituteRepo.findByEmail(email).getId();
+			eventPublisher.publishEvent(new OnRegistrationSuccessEvent(id,StudentRestApiApplication.RegistrationTypes.institute));
+
+		}
 		return "send verification mail";
 	}
 
