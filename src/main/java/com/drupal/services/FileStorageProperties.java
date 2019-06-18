@@ -7,8 +7,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class FileStorageProperties {
     private String uploadDir;
+    private String profilePicDir;
+    
+    
+    public String getProfilePicDir() {
+		return profilePicDir;
+	}
 
-    public String getUploadDir() {
+	public void setProfilePicDir(String profilePicDir) {
+		this.profilePicDir = profilePicDir;
+	}
+
+	public String getUploadDir() {
         return uploadDir;
     }
 

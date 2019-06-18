@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.tomcat.util.http.fileupload.IOUtils;
-import org.apache.tomcat.util.http.parser.MediaType;
+import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.drupal.StudentRestApiApplication;
 import com.drupal.dao.TokenRepo;
@@ -61,6 +62,8 @@ public class ApiController {
 
 	@Autowired
 	TokenController tokenController;
+	
+	
 
 	@Autowired
 	TokenRepo tokenRepo;
@@ -95,7 +98,14 @@ public class ApiController {
 				} else if (AES.encrypt(password, StudentRestApiApplication.SECRET_KEY).equals(user.getPassword())) {
 					String name = user.getName();
 					Token token = tokenController.createToken(user.getId());
-					return "{\"Token Id\" : \"" + token.getId() + "\",\"Name\":\"" + name + "\"}";
+					Object interests;
+					if(user.getInterests()!=null) {
+					interests = new JSONArray(Arrays.asList(user.getInterests()));
+					}
+					else {
+						interests = "null";
+					}
+					return "{\"Token Id\" : \"" + token.getId() + "\",\"Name\":\"" + name + "\",\"ProfilePic\":\""+user.getProfilePic()+"\",\"Age\":\""+user.getAge()+"\",\"Phone\":\""+user.getPhone()+"\",\"Interests\":"+interests.toString()+"}";
 				} else {
 					try {
 						res.sendError(403, "Incorrect password");
@@ -130,7 +140,18 @@ public class ApiController {
 		System.out.println("inside signup");
 		if (userRepo.findByEmail(email) == null) {
 			User user = userController.postUser(name, email, password, age, phone, interests);
+			try {
 			eventPublisher.publishEvent(new OnRegistrationSuccessEvent(user.getId()));
+			}
+			catch(MailException e) {
+				try {
+					res.sendError(500, "Can't send the verification mail");
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				return "{\"Error\" : \"Unable to send mail\"}";
+			}
 			return "{\"Success\" : \"User created successfully\"}";
 //			return login(email, password, res);
 		} else {
@@ -306,5 +327,32 @@ public class ApiController {
 		}
 		return result;
 	}
+	
+	
+	@RequestMapping(path="/getProfileDetails")
+	@ResponseBody
+	public String getProfileDetails(@RequestParam String email, HttpServletResponse res) {
+		User user = userRepo.findByEmail(email);
+		if(user==null) {
+			try {
+				res.sendError(400, "User with this email doesn't exist");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return "{\"Error\":\"User with this email does't exist\"}";
+		}
+		else {
+			Object interests;
+			if(user.getInterests()!=null) {
+			interests = new JSONArray(Arrays.asList(user.getInterests()));
+			}
+			else {
+				interests = "null";
+			}
+			return "{\"Name\":\""+ user.getName()+"\", \"Age\":\""+user.getAge()+"\",\"Phone\":\""+user.getPhone()+"\",\"ProfilePic\":\""+user.getProfilePic()+"\",\"Interests\":\""+interests.toString()+"}";
+		}
+	}
+	
 	
 }

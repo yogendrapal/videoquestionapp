@@ -34,7 +34,7 @@ public class VideoTagsFetcherService {
 		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 		MultiValueMap<String, Object> body
 		  = new LinkedMultiValueMap<>();
-		Resource vidResource = fileStorageService.loadFileAsResource(vidPath);
+		Resource vidResource = fileStorageService.loadFileAsResource(vidPath, "video");
 		
 		body.add("video", vidResource);
 		body.add("id", 1);

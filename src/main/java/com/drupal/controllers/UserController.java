@@ -30,25 +30,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class UserController {
 	@Autowired
 	UserRepo repo;
-	
+
 	@Autowired
 	TokenRepo tokenRepo;
 
 	@RequestMapping(path = "users", method = RequestMethod.GET)
 	@ResponseBody
 	public List<UserHiddenPassword> getAllUsers() {
-		List<User> users= repo.findAll();
+		List<User> users = repo.findAll();
 		List<UserHiddenPassword> usersHiddenPassword = new ArrayList<UserHiddenPassword>();
-		for(User user: users) {
+		for (User user : users) {
 			usersHiddenPassword.add(new UserHiddenPassword(user));
 		}
 		return usersHiddenPassword;
-		
+
 	}
 
 	@RequestMapping(path = "users/create", method = RequestMethod.POST)
 	@ResponseBody
-	public User postUser(@RequestPart String name, @RequestPart String email, @RequestPart String password, @RequestPart String age, @RequestPart String phone, @ModelAttribute Interests interests) {
+	public User postUser(@RequestPart String name, @RequestPart String email, @RequestPart String password,
+			@RequestPart String age, @RequestPart String phone, @ModelAttribute Interests interests) {
 		System.out.println("inside users post");
 		String encryptedPass = AES.encrypt(password, StudentRestApiApplication.SECRET_KEY);
 		User user = new User(name, email, encryptedPass, Integer.parseInt(age), phone, interests.getInterests());
@@ -58,74 +59,72 @@ public class UserController {
 		return user;
 	}
 
-	@RequestMapping(path = "users/update/{id}", method = RequestMethod.PUT, produces = {"appliation/json"})
+	@RequestMapping(path = "users/updateinfo", method = RequestMethod.PUT, produces = { "appliation/json" })
 	@ResponseBody
-	public String saveOrUpdateUser(@PathVariable("id") String id,  @RequestPart(name="name") String name, @RequestPart String email, @RequestPart String password , @RequestPart String tokenId , HttpServletResponse res) {
+	public String saveOrUpdateUser(@RequestPart(name = "name") String name, @RequestPart String phone,
+			@RequestPart String age, @RequestPart String tokenId, HttpServletResponse res) {
 		Token token = tokenRepo.findById(tokenId).orElse(null);
-		if(token == null)
+		if (token == null)
 			return "Error";
 		String userId = token.getUserId();
-		User user = repo.findById(id).orElse(null);
+		User user = repo.findById(userId).orElse(null);
 		System.out.println("inside put");
-		if(user==null) {
+		if (user == null) {
 			return "{\"Error\":\"User assiciated with the id is not present\"}";
 		}
-		
-		if(userId.equals(user.getId())) {
-			user.setEmail(email);
+
+		if (userId.equals(user.getId())) {
 			user.setName(name);
-			String encryptedPass = AES.encrypt(password, StudentRestApiApplication.SECRET_KEY);
-			user.setPassword(encryptedPass);
+			user.setAge(Integer.valueOf(age));
+			user.setPhone(phone);
 			repo.save(user);
-			
-			ObjectMapper Obj = new ObjectMapper(); 
+
+			ObjectMapper Obj = new ObjectMapper();
 			String jsonStr = user.toString();
-	        try { 
-	            jsonStr = Obj.writeValueAsString(user); 
-	            System.out.println(jsonStr); 
-	        } 
-	  
-	        catch (IOException e) { 
-	            e.printStackTrace(); 
-	        } 
+			try {
+				jsonStr = Obj.writeValueAsString(user);
+				System.out.println(jsonStr);
+			}
+
+			catch (IOException e) {
+				e.printStackTrace();
+			}
 			// return "Home"; This also works
 			return jsonStr;
 		}
-		
-		//System.out.println("Error in updating");
+
+		// System.out.println("Error in updating");
 		return "{\"Error\" : \"You are not allowed do this\"}";
-		
+
 	}
 
-	
-	//Something Wrong
+	// Something Wrong
 	@RequestMapping(path = "users/{id}", method = RequestMethod.GET)
 	@ResponseBody
 	public UserHiddenPassword getUser(@PathVariable("id") String id) {
 		System.out.println(repo.findById(id));
 		User user = repo.findById(id).orElse(null);
 		UserHiddenPassword toReturn = new UserHiddenPassword(user);
-		if(user==null) {
+		if (user == null) {
 			return null;
 		}
 		return toReturn;
 	}
 
-	
 	@DeleteMapping(path = "users/delete/{id}")
 	@ResponseBody
-	public String deleteUser(@PathVariable("id") String id ,  @RequestPart String tokenId) {
+	public String deleteUser(@PathVariable("id") String id, @RequestPart String tokenId) {
 		Token token = tokenRepo.findById(tokenId).orElse(null);
-		if(token == null)
+		if (token == null)
 			return "{\"Error\" : \"No such token\"}";
 		String userId = token.getUserId();
 		User user = repo.findById(id).orElse(null);
 		if (user != null) {
-			if(userId.equals(user.getId())){
+			if (userId.equals(user.getId())) {
 				repo.deleteById(id);
 				tokenRepo.deleteById(token.getId());
 				return "Deleted";
-			}else {
+			} else {
 				return "{\"Error\" : \"You are not allowed do this\"}";
 			}
 		} else {

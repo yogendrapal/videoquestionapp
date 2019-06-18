@@ -1,6 +1,8 @@
 package com.drupal.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -17,11 +19,21 @@ import java.nio.file.StandardCopyOption;
 @Service
 public class FileStorageService {
 	private final Path fileStorageLocation;
+	private final Path profilePicPath;
 
     @Autowired
     public FileStorageService(FileStorageProperties fileStorageProperties) {
         this.fileStorageLocation = Paths.get(fileStorageProperties.getUploadDir())
                 .toAbsolutePath().normalize();
+        String profilePicDir = fileStorageProperties.getProfilePicDir();
+        System.out.println(profilePicDir);
+        this.profilePicPath = Paths.get(profilePicDir).toAbsolutePath().normalize();
+        try {
+			Files.createDirectories(profilePicPath);
+		} catch (IOException e) {
+			System.out.println("could not create profile pic dir");
+            throw new RuntimeException("Could not create the directory where the uploaded files will be stored.", e);
+		}
 
         try {
             Files.createDirectories(this.fileStorageLocation);
@@ -52,9 +64,16 @@ public class FileStorageService {
         }
     }
 
-    public Resource loadFileAsResource(String fileName) {
+    public Resource loadFileAsResource(String fileName, String fileType) {
         try {
-            Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+            Path filePath;
+            if(fileType == "image"){
+            	filePath = this.profilePicPath.resolve(fileName).normalize();
+            }
+            else{
+            	filePath = this.fileStorageLocation.resolve(fileName).normalize();
+            }
+            
             System.out.println(filePath.toString());
             Resource resource = new UrlResource(filePath.toUri());
             if(resource.exists()) {

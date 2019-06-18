@@ -14,8 +14,18 @@ public class User {
 	private String[] interests;
 	private int age;
 	private String phone;
+	private String profilePic;
 	
 	
+	
+	public String getProfilePic() {
+		return profilePic;
+	}
+
+	public void setProfilePic(String profilePic) {
+		this.profilePic = profilePic;
+	}
+
 	public User() {
 	}
 	
