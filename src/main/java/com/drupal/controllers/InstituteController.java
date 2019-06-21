@@ -1,6 +1,7 @@
 package com.drupal.controllers;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -9,6 +10,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -16,6 +18,7 @@ import com.drupal.StudentRestApiApplication;
 import com.drupal.dao.InstituteRepo;
 import com.drupal.events.OnRegistrationSuccessEvent;
 import com.drupal.models.Institute;
+import com.drupal.models.User;
 import com.drupal.services.AES;
 
 
@@ -59,4 +62,25 @@ public class InstituteController {
 		eventPublisher.publishEvent(new OnRegistrationSuccessEvent(inst.getId(),StudentRestApiApplication.RegistrationTypes.institute));
 		return inst;
 	}
+	
+	
+	@RequestMapping(path="/getInstituteDetails")
+	@ResponseBody
+	public String getInstituteDetails(@RequestParam String email, HttpServletResponse res) {
+		Institute inst = instituteRepo.findByEmail(email);
+		if(inst==null) {
+			try {
+				res.sendError(400, "User with this email doesn't exist");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return "{\"Error\":\"User with this email does't exist\"}";
+		}
+		else {
+			return "{\"Name\":\""+ inst.getName()+"\",\"Email\":\""+inst.getEmail()+"\", \"Addresss\":\""+inst.getAddress()+"\",\"Phone\":\""+inst.getPhone()+"\"}";
+		}
+	}
+	
+	
 }

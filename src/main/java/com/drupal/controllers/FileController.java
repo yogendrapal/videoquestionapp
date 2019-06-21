@@ -64,16 +64,17 @@ public class FileController {
 	
 	@Autowired
 	AnswerRepo answerRepo;
-
+	
 	@Autowired
 	TokenRepo tokenRepo;
-
+	
 	@Autowired
 	FileStorageProperties fileStorageProperties;
 
 	@Autowired
 	VideoTagsFetcherService videoTagsFetcherService;
 
+	
 	@Autowired
 	VideoRepo videoRepo;
 
@@ -91,8 +92,7 @@ public class FileController {
 
 	@PostMapping("/uploadFile")
 	@ResponseBody
-	public UploadFileResponse uploadFile(@RequestParam("video") MultipartFile file, @RequestPart String tokenId,
-			HttpServletResponse res, @ModelAttribute() VideoTags tags) {
+	public UploadFileResponse uploadFile(@RequestParam("video") MultipartFile file, @RequestPart String tokenId, HttpServletResponse res, @ModelAttribute() VideoTags tags) {
 		System.out.println("Uploading");
 		System.out.println(tokenId);
 		String fileName = fileStorageService.storeFile(file);
@@ -106,18 +106,16 @@ public class FileController {
 			}
 			return null;
 		}
-		String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/downloadFile/")
-				.path(fileName).toUriString();
-		System.out.println(
-				Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize().resolve(fileName));
-		String path = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize().resolve(fileName)
-				.toString();
+		String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/downloadFile/").path(fileName).toUriString();
+		System.out.println(Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize().resolve(fileName));
+		String path = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize().resolve(fileName).toString();
 		Video v = videoRepo.findByPath(path);
 		if (v == null) {
 			System.out.println("Saving");
 			videoRepo.save(new Video(path, userId, tags.getTags()));
 			Thread thread = new Thread(new Runnable() {
 
+				
 				@Override
 				public void run() {
 					System.out.println("fetcher thread started");
@@ -125,8 +123,8 @@ public class FileController {
 					System.out.println("fetcher thread finishing");
 				}
 			});
-//			thread.start();
-			// videoTagsFetcherService.fetchDataFor(videoRepo.findByPath(path));
+			thread.start();
+			//videoTagsFetcherService.fetchDataFor(videoRepo.findByPath(path));
 		}
 		return new UploadFileResponse(fileName, fileDownloadUri, file.getContentType(), file.getSize());
 	}
@@ -134,8 +132,7 @@ public class FileController {
 	@PostMapping("/uploadMultipleFiles")
 	public List<UploadFileResponse> uploadMultipleFiles(@RequestParam("files") MultipartFile[] files,
 			@RequestPart String tokenId, HttpServletResponse res) {
-		return Arrays.asList(files).stream().map(file -> uploadFile(file, tokenId, res, null))
-				.collect(Collectors.toList());
+		return Arrays.asList(files).stream().map(file -> uploadFile(file, tokenId, res, null)).collect(Collectors.toList());
 	}
 
 	@GetMapping("/downloadFile/{fileName:.+}")
@@ -207,14 +204,13 @@ public class FileController {
 				.body(resource);
 
 	}
-
+	
 	@RequestMapping(path = "/uploadProfilePic", method = RequestMethod.POST)
 	@ResponseBody
-	public String uploadProfilePic(@RequestPart("pic") MultipartFile pic, @RequestPart String tokenId,
-			HttpServletResponse res) throws IOException {
-		System.out.println("profilePicDir: " + profilePicDir);
+	public String uploadProfilePic(@RequestPart("pic") MultipartFile pic, @RequestPart String tokenId, HttpServletResponse res) throws IOException {
+		System.out.println("profilePicDir: "+ profilePicDir);
 		Token token = tokenRepo.findById(tokenId).orElse(null);
-		if (token == null) {
+		if(token == null) {
 			res.sendError(400, "Invalid token id");
 			return "{\"Error\":\"Invalid token id\"}";
 		}

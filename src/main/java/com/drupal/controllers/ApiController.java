@@ -105,8 +105,11 @@ public class ApiController {
 						return "";
 					} else if (AES.encrypt(password, StudentRestApiApplication.SECRET_KEY).equals(user.getPassword())) {
 						String name = user.getName();
+						String age = String.valueOf(user.getAge());
+						String phone = user.getPhone();
+						String interests = user.getInterests().toString();
 						Token token = tokenController.createToken(user.getId());
-						return "{\"Token Id\" : \"" + token.getId() + "\",\"Name\":\"" + name + "\"}";
+						return "{\"Token Id\": \""+token.getId()+"\",\"Name\":\""+name+"\",\"Age\":\""+age+"\",\"Phone\":\""+phone+"\",\"Interests\":\""+interests+"\"}";
 					} else {
 						try {
 							res.sendError(403, "Incorrect password");
@@ -354,13 +357,11 @@ public class ApiController {
 		String uid = t.getUserId();
 		User u = userRepo.findById(uid).orElse(null);
 		String[] interests = u.getInterests();
-		System.out.println(interests.toString());
 		List<Video> videos = videoRepo.findAll();
 		int vidLen = videos.size();
 		int len = interests.length;
 		for(int i = 0 ; i < len ; i++) {
 			String cur = interests[i];
-			System.out.println(cur);
 			for(int j = 0 ; j < vidLen ; j++) {
 				Video v = videos.get(j); 
 				List<String> tags = v.getTags();
@@ -457,4 +458,34 @@ public class ApiController {
 		System.out.println(result);
 		return result;
 	}
+	
+	@RequestMapping(method=RequestMethod.GET ,path="/getType")
+	@ResponseBody
+	public String getType(@RequestParam String email, HttpServletResponse res) {
+		System.out.println("IN GETTYPE--------------");
+		String ret;
+		User user;
+		Institute inst;
+		user=userRepo.findByEmail(email);
+		
+		inst=instituteRepo.findByEmail(email);
+		System.out.println(email);
+		if(user!=null)
+		{
+			System.out.println(user.toString());
+			ret="User";
+		}
+		else if(inst!=null)
+		{
+			System.out.println(inst.toString());
+			ret="institute";
+		}
+		else
+		{
+			ret="null";
+		}
+		return ret;
+	}
+	
+		
 }
