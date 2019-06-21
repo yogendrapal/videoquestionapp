@@ -50,6 +50,7 @@ public class TokenController {
 
 	public String getUserIdFrom(String tokenId) {
 		Token tok = tokenRepo.findById(tokenId).orElse(null);
+		System.out.println("token is " + tok);
 		if(tok==null) {
 			return StudentRestApiApplication.NOT_FOUND;
 		}

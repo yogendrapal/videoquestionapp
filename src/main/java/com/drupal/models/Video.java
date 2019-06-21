@@ -1,5 +1,6 @@
 package com.drupal.models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -16,7 +17,8 @@ public class Video {
 	public Video(String path, String userId, List<String> tags) {
 		this.path = path;
 		this.userId = userId;
-		this.tags = tags;
+		this.tags = new ArrayList<String>();
+		this.tags.add("Politics");
 	}
 	
 	

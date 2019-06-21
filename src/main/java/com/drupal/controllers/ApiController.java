@@ -30,12 +30,14 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.drupal.StudentRestApiApplication;
+import com.drupal.dao.AnswerRepo;
 import com.drupal.dao.InstituteRepo;
 import com.drupal.dao.TokenRepo;
 import com.drupal.dao.UserRepo;
 import com.drupal.dao.VerificationTokenRepo;
 import com.drupal.dao.VideoRepo;
 import com.drupal.events.OnRegistrationSuccessEvent;
+import com.drupal.models.Answer;
 import com.drupal.models.Institute;
 import com.drupal.models.Interests;
 import com.drupal.models.Token;
@@ -66,7 +68,8 @@ public class ApiController {
 	@Autowired
 	TokenController tokenController;
 	
-	
+	@Autowired
+	AnswerRepo answerRepo;
 
 	@Autowired
 	TokenRepo tokenRepo;
@@ -281,7 +284,7 @@ public class ApiController {
 			if (curDate.before(expiryDate)) {
 				String userId = vToken.getUserId();
 				
-				if(type == StudentRestApiApplication.RegistrationTypes.user.toString()) {
+				if(type.equalsIgnoreCase(StudentRestApiApplication.RegistrationTypes.user.toString())) {
 					User user = userRepo.findById(userId).orElse(null);
 					if (user == null) {
 						try {
@@ -351,11 +354,13 @@ public class ApiController {
 		String uid = t.getUserId();
 		User u = userRepo.findById(uid).orElse(null);
 		String[] interests = u.getInterests();
+		System.out.println(interests.toString());
 		List<Video> videos = videoRepo.findAll();
 		int vidLen = videos.size();
 		int len = interests.length;
 		for(int i = 0 ; i < len ; i++) {
 			String cur = interests[i];
+			System.out.println(cur);
 			for(int j = 0 ; j < vidLen ; j++) {
 				Video v = videos.get(j); 
 				List<String> tags = v.getTags();
@@ -367,11 +372,12 @@ public class ApiController {
 				}
 			}
 		}
+		System.out.println(result.toString());
 		return result;
 	}
 	
 	
-	@RequestMapping(path="/getProfileDetails")
+	@RequestMapping(path="/getProfileDetails", produces="application/json")
 	@ResponseBody
 	public String getProfileDetails(@RequestParam String email, HttpServletResponse res) {
 		User user = userRepo.findByEmail(email);
@@ -392,9 +398,63 @@ public class ApiController {
 			else {
 				interests = "null";
 			}
-			return "{\"Name\":\""+ user.getName()+"\", \"Age\":\""+user.getAge()+"\",\"Phone\":\""+user.getPhone()+"\",\"ProfilePic\":\""+user.getProfilePic()+"\",\"Interests\":\""+interests.toString()+"}";
+			return "{\"Name\":\""+ user.getName()+"\", \"Age\":\""+user.getAge()+"\",\"Phone\":\""+user.getPhone()+"\",\"ProfilePic\":\""+user.getProfilePic()+"\",\"Interests\":"+interests.toString()+", \"Email\":\""+email+"\"}";
 		}
 	}
 	
+	@RequestMapping("getAnswersList")
+	@ResponseBody
+	public List<String> getAnswersList(@RequestParam String tokenId, HttpServletResponse res){
+		String userId  = tokenController.getUserIdFrom(tokenId);
+		if(userId==null) {
+			try {
+				res.sendError(400, "Token is invalid or expired");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return null;
+		}
+		
+		List<Answer> answers = answerRepo.findByUserId(userId);
+		List<String> results = new ArrayList<String>();
+		for(Answer ans : answers) {
+			results.add(ans.getPath());
+		}
+		System.out.println(results);
+		return results;
+	}
 	
+	@RequestMapping("getAnswersToMyQuestions")
+	@ResponseBody
+	public List<ArrayList<String>> getAnswersToMyQuestions(@RequestParam String tokenId, HttpServletResponse res){
+		System.out.println("inside atomq");
+		System.out.println("id "+ tokenId);
+		String userId  = tokenController.getUserIdFrom(tokenId);
+		if(userId==null) {
+			System.out.println("user id is null");
+			try {
+				res.sendError(400, "Token is invalid or expired");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+		List<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
+		System.out.println(userId);
+		List<Video> videos = videoRepo.findByUserId(userId);
+		System.out.println("videos " + videos);
+		for(Video v: videos) {
+			List<Answer> curAnswers = answerRepo.findByQuestionId(v.getId());
+			System.out.println(curAnswers);
+			ArrayList<String>temp = new ArrayList<String>();
+			temp.add(v.getPath());
+			for(Answer ans: curAnswers) {
+				temp.add(ans.getPath());
+			}
+			result.add(temp);
+		}
+		System.out.println(result);
+		return result;
+	}
 }

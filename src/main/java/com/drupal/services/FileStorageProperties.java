@@ -8,9 +8,17 @@ import org.springframework.stereotype.Component;
 public class FileStorageProperties {
     private String uploadDir;
     private String profilePicDir;
+    private String answersDir;
     
-    
-    public String getProfilePicDir() {
+    public String getAnswersDir() {
+		return answersDir;
+	}
+
+	public void setAnswersDir(String answersDir) {
+		this.answersDir = answersDir;
+	}
+
+	public String getProfilePicDir() {
 		return profilePicDir;
 	}
 

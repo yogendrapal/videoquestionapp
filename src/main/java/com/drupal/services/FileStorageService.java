@@ -20,7 +20,8 @@ import java.nio.file.StandardCopyOption;
 public class FileStorageService {
 	private final Path fileStorageLocation;
 	private final Path profilePicPath;
-
+	private final Path answersPath;
+	
     @Autowired
     public FileStorageService(FileStorageProperties fileStorageProperties) {
         this.fileStorageLocation = Paths.get(fileStorageProperties.getUploadDir())
@@ -28,8 +29,10 @@ public class FileStorageService {
         String profilePicDir = fileStorageProperties.getProfilePicDir();
         System.out.println(profilePicDir);
         this.profilePicPath = Paths.get(profilePicDir).toAbsolutePath().normalize();
+        this.answersPath = Paths.get(fileStorageProperties.getAnswersDir()).toAbsolutePath().normalize();
         try {
 			Files.createDirectories(profilePicPath);
+			Files.createDirectories(answersPath);
 		} catch (IOException e) {
 			System.out.println("could not create profile pic dir");
             throw new RuntimeException("Could not create the directory where the uploaded files will be stored.", e);
@@ -67,8 +70,11 @@ public class FileStorageService {
     public Resource loadFileAsResource(String fileName, String fileType) {
         try {
             Path filePath;
-            if(fileType == "image"){
+            if(fileType.equals("image")){
             	filePath = this.profilePicPath.resolve(fileName).normalize();
+            }
+            else if(fileType.equals("answer")) {
+            	filePath = this.answersPath.resolve(fileName).normalize();
             }
             else{
             	filePath = this.fileStorageLocation.resolve(fileName).normalize();
