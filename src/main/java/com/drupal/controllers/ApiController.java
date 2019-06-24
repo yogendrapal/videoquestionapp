@@ -487,5 +487,28 @@ public class ApiController {
 		return ret;
 	}
 	
+	@RequestMapping(method=RequestMethod.GET ,path="/getQuestionsInfo")
+	@ResponseBody
+	public List<String> getQuestionsInfo(@RequestParam String tokenId, HttpServletResponse res) {
+		System.out.println("IN GETIMMMMMMMMMMMMMNFO");
+		Token t = tokenRepo.findById(tokenId).orElse(null);
+		if(t==null) {
+		try {
+		res.sendError(400, "Invalid Token");
+		}catch(IOException e) {
+		System.out.println(e);
+		}
+		return null;
+		}
+		String userId = t.getUserId();
+		List<Video> videos = videoRepo.findByUserId(userId);
+		List<Answer> answers = answerRepo.findByUserId(userId);
+		List<String> result = new ArrayList<String>();
+		result.add(String.valueOf(videos.size()));
+		result.add(String.valueOf(answers.size()));
+		System.out.println(result.toString());
+		return result;
+	}
+	
 		
 }
