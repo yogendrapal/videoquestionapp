@@ -9,13 +9,33 @@ import org.springframework.stereotype.Service;
 @Service("emailSenderService")
 public class EmailSenderService {
 
+    /**
+     * A JavaMailSender automatically provided by Spring boot
+     * 
+     * This mail sender is used to send verification mails
+     */
     private JavaMailSender javaMailSender;
 
+    /**
+     * Initializes an EmailSenderService.
+     * 
+     * Initializes a javaMailSender
+     * javaMailSender is automatically provided by Spring boot
+     * 
+     * @param javaMailSender
+     */
     @Autowired
     public EmailSenderService(JavaMailSender javaMailSender) {
         this.javaMailSender = javaMailSender;
     }
 
+    /**
+     * Sends an email as described by <i>email</i>.
+     * 
+     * The email object contains all details of the mail.
+     * 
+     * @param email
+     */
     @Async
     public void sendEmail(SimpleMailMessage email) {
         javaMailSender.send(email);

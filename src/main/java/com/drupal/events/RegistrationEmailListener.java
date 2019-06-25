@@ -16,6 +16,12 @@ import com.drupal.dao.UserRepo;
 import com.drupal.dao.VerificationTokenRepo;
 import com.drupal.models.VerificationToken;
 
+/**
+ * This listener listen for a OnRegistrationSuccessEvent and uses a MailSender to send email verification mail if event occurs.
+ * 
+ * @author pratik, sai, henil, shweta
+ * @see OnRegistrationSuccessEvent, MailSender
+ */
 @Component
 public class RegistrationEmailListener implements ApplicationListener<OnRegistrationSuccessEvent> {
 
@@ -34,11 +40,34 @@ public class RegistrationEmailListener implements ApplicationListener<OnRegistra
 	@Autowired
 	InstituteRepo instituteRepo;
 
+	/**
+	 * Handler for handling the event.
+	 * 
+	 * This method doesn't do anything directly but instead
+	 * calls confirmRegistration() method on this event
+	 *
+	 * @param event the event which is thrown on successful registration/Creation of a User/Institute account
+	 * @see confirmRegistration 
+	 * @see User
+	 * @see Institute
+	 */
 	@Override
 	public void onApplicationEvent(OnRegistrationSuccessEvent event) {
 		this.confirmRegistration(event);
 	}
 
+	/**
+	 * Sends an email-verification-mail using the information in event
+	 * 
+	 * It performs the following tasks-
+	 * <ol>
+	 * <li> Creates a VerificationToken in the database for this event
+	 * <li> Extracts email from the event and sends a verification mail containing the verification-token
+	 * </ol>
+	 * 
+	 * @param event the event which is thrown on successful registration/Creation of a User/Institute account
+	 * @see MailSender, VerificationToken
+	 */
 	private void confirmRegistration(OnRegistrationSuccessEvent event) {
 		String tokenId = UUID.randomUUID().toString();
 		VerificationToken token = new VerificationToken(event.getUserId(), tokenId);

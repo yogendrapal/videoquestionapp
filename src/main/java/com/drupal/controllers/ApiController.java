@@ -49,13 +49,12 @@ import com.drupal.services.EmailSenderService;
 
 // TODO return all JSON error responses explicitly (not by res.sendError as it doesn't work on external server(not embedded))
 
-
 @Controller
 public class ApiController {
 
 	@Autowired
 	InstituteRepo instituteRepo;
-	
+
 	@Autowired
 	VerificationTokenRepo verificationTokenRepo;
 
@@ -67,7 +66,7 @@ public class ApiController {
 
 	@Autowired
 	TokenController tokenController;
-	
+
 	@Autowired
 	AnswerRepo answerRepo;
 
@@ -91,8 +90,8 @@ public class ApiController {
 	public String login(@RequestPart String email, @RequestPart String password, HttpServletResponse res) {
 		User user = userRepo.findByEmail(email);
 		Institute inst = instituteRepo.findByEmail(email);
-		if (user != null ||  inst!=null) {
-			if(user!=null && inst==null) {
+		if (user != null || inst != null) {
+			if (user != null && inst == null) {
 				if (user.isEmailVerified()) {
 					Token t = tokenRepo.findByUserId(user.getId());
 					if (t != null) {
@@ -109,7 +108,8 @@ public class ApiController {
 						String phone = user.getPhone();
 						String interests = user.getInterests().toString();
 						Token token = tokenController.createToken(user.getId());
-						return "{\"Token Id\": \""+token.getId()+"\",\"Name\":\""+name+"\",\"Age\":\""+age+"\",\"Phone\":\""+phone+"\",\"Interests\":\""+interests+"\"}";
+						return "{\"Token Id\": \"" + token.getId() + "\",\"Name\":\"" + name + "\",\"Age\":\"" + age
+								+ "\",\"Phone\":\"" + phone + "\",\"Interests\":\"" + interests + "\"}";
 					} else {
 						try {
 							res.sendError(403, "Incorrect password");
@@ -126,7 +126,7 @@ public class ApiController {
 						e.printStackTrace();
 					}
 				}
-			}else if(user==null && inst!=null) {
+			} else if (user == null && inst != null) {
 				if (inst.isEmailVerified()) {
 					Token t = tokenRepo.findByUserId(inst.getId());
 					if (t != null) {
@@ -158,8 +158,6 @@ public class ApiController {
 					}
 				}
 			}
-			
-			
 
 		} else {
 			try {
@@ -173,15 +171,16 @@ public class ApiController {
 
 	@RequestMapping(path = "signup", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
-	public String signUp(@RequestPart String email, @RequestPart String password, @RequestPart String name, @RequestPart String age, @RequestPart String phone, @ModelAttribute Interests interests,
+	public String signUp(@RequestPart String email, @RequestPart String password, @RequestPart String name,
+			@RequestPart String age, @RequestPart String phone, @ModelAttribute Interests interests,
 			HttpServletResponse res) {
 		System.out.println("inside signup");
 		if (userRepo.findByEmail(email) == null) {
 			User user = userController.postUser(name, email, password, age, phone, interests);
 			try {
-			eventPublisher.publishEvent(new OnRegistrationSuccessEvent(user.getId(), StudentRestApiApplication.RegistrationTypes.user));
-			}
-			catch(MailException e) {
+				eventPublisher.publishEvent(
+						new OnRegistrationSuccessEvent(user.getId(), StudentRestApiApplication.RegistrationTypes.user));
+			} catch (MailException e) {
 				try {
 					res.sendError(500, "Can't send the verification mail");
 				} catch (IOException e1) {
@@ -249,30 +248,29 @@ public class ApiController {
 
 	}
 
-
-
-
 	@RequestMapping("sendVerificationMail")
 	@ResponseBody
 	public String sendVerificationMail(@RequestParam String email) {
 		User user = userRepo.findByEmail(email);
-		String id ;
-		if(user!=null) {
-		id= userRepo.findByEmail(email).getId();
-		eventPublisher.publishEvent(new OnRegistrationSuccessEvent(id,StudentRestApiApplication.RegistrationTypes.user));
-		}
-		else {
+		String id;
+		if (user != null) {
+			id = userRepo.findByEmail(email).getId();
+			eventPublisher
+					.publishEvent(new OnRegistrationSuccessEvent(id, StudentRestApiApplication.RegistrationTypes.user));
+		} else {
 			id = instituteRepo.findByEmail(email).getId();
-			eventPublisher.publishEvent(new OnRegistrationSuccessEvent(id,StudentRestApiApplication.RegistrationTypes.institute));
+			eventPublisher.publishEvent(
+					new OnRegistrationSuccessEvent(id, StudentRestApiApplication.RegistrationTypes.institute));
 
 		}
 		return "send verification mail";
 	}
 
-	@RequestMapping(path="confirmtoken", method=RequestMethod.GET, produces = "application/json")
+	@RequestMapping(path = "confirmtoken", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public String confirmToken(@RequestParam String type, @RequestParam String token, HttpServletResponse res) throws IOException {
-		System.out.println("inside confirm token "+token);
+	public String confirmToken(@RequestParam String type, @RequestParam String token, HttpServletResponse res)
+			throws IOException {
+		System.out.println("inside confirm token " + token);
 		VerificationToken vToken = verificationTokenRepo.findByToken(token);
 		if (vToken == null) {
 			try {
@@ -286,8 +284,8 @@ public class ApiController {
 			Date expiryDate = vToken.getExpiryDate();
 			if (curDate.before(expiryDate)) {
 				String userId = vToken.getUserId();
-				
-				if(type.equalsIgnoreCase(StudentRestApiApplication.RegistrationTypes.user.toString())) {
+
+				if (type.equalsIgnoreCase(StudentRestApiApplication.RegistrationTypes.user.toString())) {
 					User user = userRepo.findById(userId).orElse(null);
 					if (user == null) {
 						try {
@@ -298,8 +296,7 @@ public class ApiController {
 					}
 					user.setEmailVerified(true);
 					userRepo.save(user);
-				}
-				else {
+				} else {
 					Institute ins = instituteRepo.findById(userId).orElse(null);
 					if (ins == null) {
 						try {
@@ -313,8 +310,7 @@ public class ApiController {
 				}
 				verificationTokenRepo.delete(vToken);
 				return "{\"Success\":\"Email successfully verified\"}";
-			}
-			else {
+			} else {
 				res.sendError(400, "Token already expired");
 			}
 
@@ -323,35 +319,35 @@ public class ApiController {
 		return token;
 
 	}
-	
-	
+
 	@RequestMapping(path = "/getVideo/{id}", method = RequestMethod.GET)
-	@ResponseBody public File getPreview2(@PathVariable("id") String id, HttpServletResponse response) {
-	    try {
-	    	System.out.println("HHHHHHHHHHHHHHHHHHHHHHHHHH");
-	    	Video v = videoRepo.findById(id).orElse(null);
-	    	if(v != null) {
-	    		
-	    		String path = v.getPath();
-		        System.out.println(path);
-		        File file = new File(path);
-		        System.out.println("SSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
-		        response.setContentType("video/mp4");
-		        response.setHeader("Content-Disposition", "attachment; filename="+file.getName().replace(" ", "_"));
-		        InputStream iStream = new FileInputStream(file);
-		        IOUtils.copy(iStream, response.getOutputStream());
+	@ResponseBody
+	public File getPreview2(@PathVariable("id") String id, HttpServletResponse response) {
+		try {
+			System.out.println("HHHHHHHHHHHHHHHHHHHHHHHHHH");
+			Video v = videoRepo.findById(id).orElse(null);
+			if (v != null) {
+
+				String path = v.getPath();
+				System.out.println(path);
+				File file = new File(path);
+				System.out.println("SSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
+				response.setContentType("video/mp4");
+				response.setHeader("Content-Disposition", "attachment; filename=" + file.getName().replace(" ", "_"));
+				InputStream iStream = new FileInputStream(file);
+				IOUtils.copy(iStream, response.getOutputStream());
 //		        response.flushBuffer();
-		        return file;
-	    	}
-	    } catch (Exception e) {
-	        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-	    }
+				return file;
+			}
+		} catch (Exception e) {
+			response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+		}
 		return null;
 	}
-	
+
 	@RequestMapping(path = "/getQuestions", method = RequestMethod.GET)
 	@ResponseBody
-	public List<String> getAllQuestions(@RequestParam String tokenId){
+	public List<String> getAllQuestions(@RequestParam String tokenId) {
 		List<String> result = new ArrayList<String>();
 		Token t = tokenRepo.findById(tokenId).orElse(null);
 		String uid = t.getUserId();
@@ -360,13 +356,13 @@ public class ApiController {
 		List<Video> videos = videoRepo.findAll();
 		int vidLen = videos.size();
 		int len = interests.length;
-		for(int i = 0 ; i < len ; i++) {
+		for (int i = 0; i < len; i++) {
 			String cur = interests[i];
-			for(int j = 0 ; j < vidLen ; j++) {
-				Video v = videos.get(j); 
+			for (int j = 0; j < vidLen; j++) {
+				Video v = videos.get(j);
 				List<String> tags = v.getTags();
-				if(tags.contains(cur)) {
-					if(!result.contains(v.getId()) && !v.getUserId().equals(uid) ) {
+				if (tags.contains(cur)) {
+					if (!result.contains(v.getId()) && !v.getUserId().equals(uid)) {
 						System.out.println(v.getId());
 						result.add(v.getPath());
 					}
@@ -376,38 +372,36 @@ public class ApiController {
 		System.out.println(result.toString());
 		return result;
 	}
-	
-	
-	@RequestMapping(path="/getProfileDetails", produces="application/json")
+
+	@RequestMapping(path = "/getProfileDetails", produces = "application/json")
 	@ResponseBody
 	public String getProfileDetails(@RequestParam String email, HttpServletResponse res) {
 		User user = userRepo.findByEmail(email);
-		if(user==null) {
+		if (user == null) {
 			try {
 				res.sendError(400, "User with this email doesn't exist");
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			return "{\"Error\":\"User with this email does't exist\"}";
-		}
-		else {
+		} else {
 			Object interests;
-			if(user.getInterests()!=null) {
-			interests = new JSONArray(Arrays.asList(user.getInterests()));
-			}
-			else {
+			if (user.getInterests() != null) {
+				interests = new JSONArray(Arrays.asList(user.getInterests()));
+			} else {
 				interests = "null";
 			}
-			return "{\"Name\":\""+ user.getName()+"\", \"Age\":\""+user.getAge()+"\",\"Phone\":\""+user.getPhone()+"\",\"ProfilePic\":\""+user.getProfilePic()+"\",\"Interests\":"+interests.toString()+", \"Email\":\""+email+"\"}";
+			return "{\"Name\":\"" + user.getName() + "\", \"Age\":\"" + user.getAge() + "\",\"Phone\":\""
+					+ user.getPhone() + "\",\"ProfilePic\":\"" + user.getProfilePic() + "\",\"Interests\":"
+					+ interests.toString() + ", \"Email\":\"" + email + "\"}";
 		}
 	}
-	
+
 	@RequestMapping("getAnswersList")
 	@ResponseBody
-	public List<String> getAnswersList(@RequestParam String tokenId, HttpServletResponse res){
-		String userId  = tokenController.getUserIdFrom(tokenId);
-		if(userId==null) {
+	public List<String> getAnswersList(@RequestParam String tokenId, HttpServletResponse res) {
+		String userId = tokenController.getUserIdFrom(tokenId);
+		if (userId == null) {
 			try {
 				res.sendError(400, "Token is invalid or expired");
 			} catch (IOException e) {
@@ -416,23 +410,23 @@ public class ApiController {
 			}
 			return null;
 		}
-		
+
 		List<Answer> answers = answerRepo.findByUserId(userId);
 		List<String> results = new ArrayList<String>();
-		for(Answer ans : answers) {
+		for (Answer ans : answers) {
 			results.add(ans.getPath());
 		}
 		System.out.println(results);
 		return results;
 	}
-	
+
 	@RequestMapping("getAnswersToMyQuestions")
 	@ResponseBody
-	public List<ArrayList<String>> getAnswersToMyQuestions(@RequestParam String tokenId, HttpServletResponse res){
+	public List<ArrayList<String>> getAnswersToMyQuestions(@RequestParam String tokenId, HttpServletResponse res) {
 		System.out.println("inside atomq");
-		System.out.println("id "+ tokenId);
-		String userId  = tokenController.getUserIdFrom(tokenId);
-		if(userId==null) {
+		System.out.println("id " + tokenId);
+		String userId = tokenController.getUserIdFrom(tokenId);
+		if (userId == null) {
 			System.out.println("user id is null");
 			try {
 				res.sendError(400, "Token is invalid or expired");
@@ -445,12 +439,12 @@ public class ApiController {
 		System.out.println(userId);
 		List<Video> videos = videoRepo.findByUserId(userId);
 		System.out.println("videos " + videos);
-		for(Video v: videos) {
+		for (Video v : videos) {
 			List<Answer> curAnswers = answerRepo.findByQuestionId(v.getId());
 			System.out.println(curAnswers);
-			ArrayList<String>temp = new ArrayList<String>();
+			ArrayList<String> temp = new ArrayList<String>();
 			temp.add(v.getPath());
-			for(Answer ans: curAnswers) {
+			for (Answer ans : curAnswers) {
 				temp.add(ans.getPath());
 			}
 			result.add(temp);
@@ -458,34 +452,50 @@ public class ApiController {
 		System.out.println(result);
 		return result;
 	}
-	
-	@RequestMapping(method=RequestMethod.GET ,path="/getType")
+
+	@RequestMapping(method = RequestMethod.GET, path = "/getType")
 	@ResponseBody
 	public String getType(@RequestParam String email, HttpServletResponse res) {
 		System.out.println("IN GETTYPE--------------");
 		String ret;
 		User user;
 		Institute inst;
-		user=userRepo.findByEmail(email);
-		
-		inst=instituteRepo.findByEmail(email);
+		user = userRepo.findByEmail(email);
+
+		inst = instituteRepo.findByEmail(email);
 		System.out.println(email);
-		if(user!=null)
-		{
+		if (user != null) {
 			System.out.println(user.toString());
-			ret="User";
-		}
-		else if(inst!=null)
-		{
+			ret = "User";
+		} else if (inst != null) {
 			System.out.println(inst.toString());
-			ret="institute";
-		}
-		else
-		{
-			ret="null";
+			ret = "institute";
+		} else {
+			ret = "null";
 		}
 		return ret;
 	}
-	
-		
+
+	@RequestMapping(method = RequestMethod.GET, path = "/getQuestionsInfo")
+	@ResponseBody
+	public List<String> getQuestionsInfo(@RequestParam String tokenId, HttpServletResponse res) {
+		System.out.println("IN GETIMMMMMMMMMMMMMNFO");
+		Token t = tokenRepo.findById(tokenId).orElse(null);
+		if (t == null) {
+			try {
+				res.sendError(400, "Invalid Token");
+			} catch (IOException e) {
+				System.out.println(e);
+			}
+			return null;
+		}
+		String userId = t.getUserId();
+		List<Video> videos = videoRepo.findByUserId(userId);
+		List<Answer> answers = answerRepo.findByUserId(userId);
+		List<String> result = new ArrayList<String>();
+		result.add(String.valueOf(videos.size()));
+		result.add(String.valueOf(answers.size()));
+		System.out.println(result.toString());
+		return result;
+	}
 }

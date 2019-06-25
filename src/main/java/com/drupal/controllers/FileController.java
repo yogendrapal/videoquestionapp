@@ -90,6 +90,18 @@ public class FileController {
 	@Autowired
 	UserRepo userRepo;
 
+	/**
+	 * Uploads the file to the server.
+	 * 
+	 * <p>
+	 * Saves the file received in the request in storage and inserts a new record in Video Document for the file.
+	 * 
+	 * @param file the file sent by the client in the Multipart form
+	 * @param tokenId string sent within the request to identify the session of the user
+	 * @param res the response returned by this to the client
+	 * @param tags the video-tags of the file
+	 * @return UploadFileResponse for the file uploaded containing the download-url of the file
+	 */
 	@PostMapping("/uploadFile")
 	@ResponseBody
 	public UploadFileResponse uploadFile(@RequestParam("video") MultipartFile file, @RequestPart String tokenId, HttpServletResponse res, @ModelAttribute() VideoTags tags) {
@@ -129,12 +141,18 @@ public class FileController {
 		return new UploadFileResponse(fileName, fileDownloadUri, file.getContentType(), file.getSize());
 	}
 
-	@PostMapping("/uploadMultipleFiles")
-	public List<UploadFileResponse> uploadMultipleFiles(@RequestParam("files") MultipartFile[] files,
-			@RequestPart String tokenId, HttpServletResponse res) {
-		return Arrays.asList(files).stream().map(file -> uploadFile(file, tokenId, res, null)).collect(Collectors.toList());
-	}
 
+	/**
+	 * Downloads the fileName from the server.
+	 * 
+	 * <p>
+	 * Uses FileStorageService.loadFileAsResource  with <b>question</b> argument internally to load the required resource.
+	 * Content-type if the mime-type of the file(if it has one), otherwise <i>application/octet-stream</i>
+	 * 
+	 * @param fileName the name of the file to download.
+	 * @param request the request send by the client
+	 * @return the resource requested in request using fileName
+	 */
 	@GetMapping("/downloadFile/{fileName:.+}")
 	public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, HttpServletRequest request) {
 		// Load file as Resource
@@ -158,6 +176,17 @@ public class FileController {
 				.body(resource);
 	}
 	
+	/**
+	 * Downloads the video-answer denoted by fileName from the server.
+	 * 
+	 * <p>
+	 * Uses FileStorageService.loadFileAsResource  with <b>answer</b> argument internally to load the required resource.
+	 * Content-type if the mime-type of the file(if it has one), otherwise <i>application/octet-stream</i>
+	 * 
+	 * @param fileName the name of the file to download.
+	 * @param request the request send by the client
+	 * @return the answer video requested in request using fileName
+	 */
 	@GetMapping("/downloadAnswer/{fileName:.+}")
 	public ResponseEntity<Resource> downloadAnswer(@PathVariable String fileName, HttpServletRequest request) {
 		Resource resource = fileStorageService.loadFileAsResource(fileName, "answer");
@@ -182,6 +211,18 @@ public class FileController {
 	
 		
 
+	/**
+	 * Downloads the Profile picture denoted by fileName from the server.
+	 * 
+	 * <p>
+	 * Uses FileStorageService.loadFileAsResource with <b>image</b> argument internally to load the required resource.
+	 * Content-type if the mime-type of the file(if it has one), otherwise <i>application/octet-stream</i>
+	 * 
+	 * 
+	 * @param fileName the name of the file to download.
+	 * @param request the request send by the client
+	 * @return the answer video requested in request using fileName
+	 */
 	@GetMapping("/getProfilePic/{fileName:.+}")
 	public ResponseEntity<Resource> getProfilePic(@PathVariable String fileName, HttpServletRequest request) {
 		Resource resource = fileStorageService.loadFileAsResource(fileName, "image");
@@ -205,6 +246,19 @@ public class FileController {
 
 	}
 	
+	/**
+	 * Changes the profile pic of a user denoted by tokenId
+	 * 
+	 * <p>
+	 * Fist saves the pic in the file system
+	 * Identifies the user from the tokenId and updates his data in the db to point to new pic
+	 * 
+	 * @param tokenId string to identify the session of the user
+	 * @param res the response returned by this to the client
+	 * @param pic the file sent in the multipart form by the client to be saved as profile pic
+	 * @return the success or error JSON String 
+	 * @throws IOException
+	 */
 	@RequestMapping(path = "/uploadProfilePic", method = RequestMethod.POST)
 	@ResponseBody
 	public String uploadProfilePic(@RequestPart("pic") MultipartFile pic, @RequestPart String tokenId, HttpServletResponse res) throws IOException {
@@ -237,6 +291,17 @@ public class FileController {
 		}
 	}
 
+	/**
+	 * Uploads the answer file for questionName
+	 * 
+	 * 
+	 * 
+	 * @param file the answer to be uploaded
+	 * @param tokenId String to identify the current user session
+	 * @param res the http response sent to the client
+	 * @param questionName the name of the question for which answer is uploaded
+	 * @return the success or error message
+	 */
 	@RequestMapping("uploadAnswer")
 	@ResponseBody
 	public String uploadAnswerVideo(@RequestPart("video") MultipartFile file, @RequestPart String tokenId,
@@ -303,6 +368,14 @@ public class FileController {
 		return null;
 	}
 	
+	/**
+	 * Gives the user details for the ansName
+	 * 
+	 * 
+	 * @param ansName the name of the answer file for which user details is to return
+	 * @param res the http response sent to the client
+	 * @return the user details who has answered the ansName
+	 */
 	@GetMapping(path="getUserFromAnswer", produces = "application/json")
 	@ResponseBody
 	public String getUserFromAnswer(@RequestParam String ansName, HttpServletResponse res) {

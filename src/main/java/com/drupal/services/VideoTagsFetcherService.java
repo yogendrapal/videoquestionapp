@@ -19,14 +19,38 @@ import com.drupal.dao.VideoRepo;
 import com.drupal.models.Video;
 
 
+/**
+ * A service which fetches tags for a video by using another api.
+ * 
+ * This service is supposed to be run in a thread as it is time intensive.
+ * @author pratik,henil,sai,Shweta
+ *
+ */
 @Service
 public class VideoTagsFetcherService {
+	/**
+	 * 
+	 */
 	@Autowired
 	FileStorageService fileStorageService;
 	
+	/**
+	 * 
+	 */
 	@Autowired
 	VideoRepo videoRepo;
 	
+	/**
+	 * Fetches the data(tags) for the video specified by <b>video</b>.
+	 * 
+	 * <p>
+	 * It finds the actual video in storage using the video, sends this video to another public api 
+	 * which is supposed to provide the tags for the video.
+	 * It receives the tags from the api and update the entry for the video with the tags.
+	 * 
+	 * @param video  the Video for which the data has to be fetched
+	 * @see Video
+	 */
 	public void fetchDataFor(Video video) {
 		String vidPath = video.getPath();
 		
