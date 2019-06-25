@@ -32,6 +32,20 @@ public class InstituteController {
 	@Autowired
 	private ApplicationEventPublisher eventPublisher;
 	
+	/**
+	 * Creates a new Institute user.
+	 * <p>
+	 * Uses postUser() method to create a new Institute user.
+	 * 
+	 * @param name The name of institute
+	 * @param address The address of the institute
+	 * @param email The email of the institute
+	 * @param password The password of institute
+	 * @param phone The phone number of institute
+	 * @param res The response that is sent to the client
+	 * @return A string which describes whether sign-up was successful or not and depending 
+	 * on the string an appropriate message is shown on the client side.
+	 */
 	@RequestMapping(path="institute/create", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public String signupAsInstitute(@RequestPart String name, @RequestPart String address,@RequestPart String email, @RequestPart String password, @RequestPart String phone,HttpServletResponse res) {
@@ -51,6 +65,19 @@ public class InstituteController {
 		}
 	}
 	
+	/**
+	 * Helper function called by signupAsInstitute() to create a new Institute user
+	 * <p> 
+	 *  Creates a new Institute user and adds the institute's information such as name,address,
+	 *  email,password(in encrypted form) and phone number into the database.
+	 *  
+	 * @param name The name of institute
+	 * @param address The address of the institute
+	 * @param email The email of the institute
+	 * @param password The password of institute
+	 * @param phone The phone number of institute
+	 * @return The new institute object created after registration. 
+	 */
 	@ResponseBody
 	public Institute postUser(@RequestPart String name, @RequestPart String address,@RequestPart String email, @RequestPart String password, @RequestPart String phone) {
 		System.out.println("inside users post");
@@ -64,6 +91,16 @@ public class InstituteController {
 	}
 	
 	
+	/**
+	 * Finds Institute on the basis of the email.
+	 * <p>
+	 * Uses email to get all the details of the institute namely name,email,address 
+	 * and the phone number.
+	 *    
+	 * @param email The email of the institute to be found
+	 * @param res The response that is sent to the client
+	 * @return The JSON response consisting of the details of the institute  
+	 */
 	@RequestMapping(path="/getInstituteDetails")
 	@ResponseBody
 	public String getInstituteDetails(@RequestParam String email, HttpServletResponse res) {

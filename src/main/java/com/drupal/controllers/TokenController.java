@@ -27,6 +27,13 @@ public class TokenController {
 	@Autowired 
 	UserRepo userRepo;
 
+	/**Creates a new token for the new session of the user with id-userId.
+	 * <p>
+	 * The newly created token is associated with the user having id-userId.   
+	 * 
+	 * @param userId  user is uniquely identified by the userId.   
+	 * @return Token object created for the new session of the user with id-userId.
+	 */
 	@PostMapping("/tokens/create")
 	@ResponseBody
 	public Token createToken(@RequestPart String userId) {
@@ -35,6 +42,14 @@ public class TokenController {
 		return newToken;
 	}
 
+	/**
+	 * Deletes the token with id:- id
+	 * 
+	 * @param id id of the token to be deleted.  
+	 * @param email Used to identify the user associated with token having id as id. 
+	 * @return Returns true if token is successfully deleted else in case of some error
+	 * returns false. 
+	 */
 	@DeleteMapping("/tokens/delete")
 	@ResponseBody
 	public boolean deleteToken(@RequestPart String id, String email) {
@@ -48,6 +63,12 @@ public class TokenController {
 			}
 	}
 
+	/**
+	 * Finds the userId associated with the tokenId.
+	 * 
+	 * @param tokenId  The id of the token used to find the userId. 
+	 * @return Returns the userId associated with the tokenId.
+	 */
 	public String getUserIdFrom(String tokenId) {
 		Token tok = tokenRepo.findById(tokenId).orElse(null);
 		if(tok==null) {
@@ -56,11 +77,29 @@ public class TokenController {
 		return tok.getUserId();
 	}
 	
+	
+	/**
+	 * Validates the token 
+	 * <p>
+	 * Accepts token and email as input parameters and determines if the token is valid or not.
+	 *  
+	 * @param token The token to be validated 
+	 * @param email The email of the user in the current session.
+	 * @return Returns true if token is valid else if token is expired return false.
+	 */
 	boolean validateToken(Token token, @NotNull String email) {
 		String userId = token.getUserId();
 		return validateToken(token.getId(), userId);
 	}
 
+	/**
+	 * Validates the token
+	 * <p>
+	 * Accepts tokenId and userId as input parameters and determines if the token is valid or not.
+	 * @param tokenId The id of token to be validated
+	 * @param userId The id of user in the current session
+	 * @return Returns true if token is valid else if token is expired return false.
+	 */
 	boolean validateToken(@NotNull String tokenId, @NotNull String userId) {
 		Token token = tokenRepo.findById(tokenId).orElse(null);
 		if (token == null) {
