@@ -86,6 +86,17 @@ public class ApiController {
 	@Autowired
 	FileController fileController;
 
+	/**
+	 * Used to log in a user.
+	 * <p>
+	 * The value of the email argument and password argument is searched in the database.
+	 * If present, the user is logged in or the appropriate error message is sent in response. 
+	 *  
+	 * @param email The email address of the user.
+	 * @param password The password of the user.
+	 * @param res the response that is sent to the client.
+	 * @return A string is returned which prints the user information if credentials are correct or print the respective error message.
+	 */
 	@RequestMapping(path = "login", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public String login(@RequestPart String email, @RequestPart String password, HttpServletResponse res) {
@@ -171,6 +182,20 @@ public class ApiController {
 		return null;
 	}
 
+	/**
+	 * Creates a new user.
+	 * <p>
+	 * Uses postUser() method to create a new user.
+	 * 
+	 * @param email The email address of the user.
+	 * @param password The password of the user.
+	 * @param name The name of the user.
+	 * @param age The age of the user.
+	 * @param phone The phone of the user.
+	 * @param interests The list of the interests of the user.
+	 * @param res The response that is sent to the client.
+	 * @return A string which describes whether sign up was successful or not.
+	 */
 	@RequestMapping(path = "signup", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public String signUp(@RequestPart String email, @RequestPart String password, @RequestPart String name, @RequestPart String age, @RequestPart String phone, @ModelAttribute Interests interests,
@@ -203,9 +228,19 @@ public class ApiController {
 		}
 	}
 
+	/**
+	 * Finds all the questions asked by a specific user.
+	 * <p>
+	 * Uses tokenController to find the user from the tokenId.
+	 * Uses the videoRepo to get the list of the questions asked by a specific user.
+	 * 
+	 * @param tokenId Identifies the session of the user.
+	 * @param res The response that is sent to the client.
+	 * @return Returns the list of the question asked by a user whose tokenId is specified. 
+	 */
 	@RequestMapping(path = "videos", method = RequestMethod.GET)
 	@ResponseBody
-	public List<Video> getVideos(@RequestPart String tokenId, HttpServletRequest req, HttpServletResponse res) {
+	public List<Video> getVideos(@RequestPart String tokenId, HttpServletResponse res) {
 		String userId = tokenController.getUserIdFrom(tokenId);
 		System.out.println(userId);
 		if (userId.equals(StudentRestApiApplication.NOT_FOUND)) {
@@ -221,6 +256,16 @@ public class ApiController {
 		return videos;
 	}
 
+	/**
+	 * Logs out a user
+	 * <p>
+	 * Ends the session of the logged in user by deleting the tokenId.
+	 * 
+	 * @param tokenId Identifies the session of the user.
+	 * @param email The email of the logged in user.
+	 * @param res The response that is sent to the client.
+	 * @return A string which specifies whether the log out was successful or not.
+	 */
 	@RequestMapping(path = "logOut", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public String loggingOut(@RequestPart String tokenId, @RequestPart String email, HttpServletResponse res) {
@@ -231,6 +276,17 @@ public class ApiController {
 			return "{\"Error\" : \"Cannot Log Out The User\"}";
 	}
 
+	/**
+	 * Used to find a video with the given id and return it.
+	 * <p>
+	 * videoRepo is used to find the video with the given id and returns null if not present. 
+	 * 
+	 * @param id The id of the video.
+	 * @param tokenId Identifies the session of the user.
+	 * @param req The request sent by client.
+	 * @param res The response that is sent to the client.
+	 * @return Returns the video with the given id.
+	 */
 	@RequestMapping(path = "videos/{id}", method = RequestMethod.GET)
 	@ResponseBody
 	public ResponseEntity<Resource> getVideo(@PathVariable String id, @RequestPart String tokenId,
@@ -246,12 +302,17 @@ public class ApiController {
 		}
 		String fileName = v.getPath().substring(v.getPath().lastIndexOf('\\') + 1, v.getPath().length());
 		return fileController.downloadFile(fileName, req);
-
 	}
 
 
 
 
+	/**
+	 * Sends a verification email to the specified email.
+	 * 
+	 * @param email The email of the logged in user.
+	 * @return  Returns a statement that says whether the verification mail is sent or not.
+	 */
 	@RequestMapping("sendVerificationMail")
 	@ResponseBody
 	public String sendVerificationMail(@RequestParam String email) {
@@ -269,6 +330,15 @@ public class ApiController {
 		return "send verification mail";
 	}
 
+	/**
+	 * Resending verification email.
+	 * 
+	 * @param type Identifies whether the user is an institute or not. 
+	 * @param token Identifies the session of the user.
+	 * @param res The response that is sent to the client.
+	 * @return Returns a statement that says whether the verification mail is sent or not.
+	 * @throws IOException
+	 */
 	@RequestMapping(path="confirmtoken", method=RequestMethod.GET, produces = "application/json")
 	@ResponseBody
 	public String confirmToken(@RequestParam String type, @RequestParam String token, HttpServletResponse res) throws IOException {
@@ -325,30 +395,14 @@ public class ApiController {
 	}
 	
 	
-	@RequestMapping(path = "/getVideo/{id}", method = RequestMethod.GET)
-	@ResponseBody public File getPreview2(@PathVariable("id") String id, HttpServletResponse response) {
-	    try {
-	    	System.out.println("HHHHHHHHHHHHHHHHHHHHHHHHHH");
-	    	Video v = videoRepo.findById(id).orElse(null);
-	    	if(v != null) {
-	    		
-	    		String path = v.getPath();
-		        System.out.println(path);
-		        File file = new File(path);
-		        System.out.println("SSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
-		        response.setContentType("video/mp4");
-		        response.setHeader("Content-Disposition", "attachment; filename="+file.getName().replace(" ", "_"));
-		        InputStream iStream = new FileInputStream(file);
-		        IOUtils.copy(iStream, response.getOutputStream());
-//		        response.flushBuffer();
-		        return file;
-	    	}
-	    } catch (Exception e) {
-	        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-	    }
-		return null;
-	}
 	
+	
+	/**
+	 * Creates and returns a list of the names of the questions that are related to a user's interests.
+	 * 
+	 * @param tokenId Identifies the session of the user.
+	 * @return A list of names of questions that are related to a user. 
+	 */
 	@RequestMapping(path = "/getQuestions", method = RequestMethod.GET)
 	@ResponseBody
 	public List<String> getAllQuestions(@RequestParam String tokenId){
@@ -378,6 +432,12 @@ public class ApiController {
 	}
 	
 	
+	/**Finds and returns the details of the user with the given email.
+	 * 
+	 * @param email The email of the logged in user.
+	 * @param res The response that is sent to the client.
+	 * @return The details of a user profile.
+	 */
 	@RequestMapping(path="/getProfileDetails", produces="application/json")
 	@ResponseBody
 	public String getProfileDetails(@RequestParam String email, HttpServletResponse res) {
@@ -403,6 +463,13 @@ public class ApiController {
 		}
 	}
 	
+	/**
+	 * Creates and returns a list of the answers answered by the user.
+	 * 
+	 * @param tokenId Identifies the session of the user.
+	 * @param res The response that is sent to the client.
+	 * @return A list of answers answered by the user.
+	 */
 	@RequestMapping("getAnswersList")
 	@ResponseBody
 	public List<String> getAnswersList(@RequestParam String tokenId, HttpServletResponse res){
@@ -426,6 +493,13 @@ public class ApiController {
 		return results;
 	}
 	
+	/**
+	 * Creates and returns a 2 dimensional list of the answers to each of the user's question.
+	 * 
+	 * @param tokenId Identifies the session of the user.
+	 * @param res The response that is sent to the client.
+	 * @return A 2 dimensional list of answers to each questions of a user.
+	 */
 	@RequestMapping("getAnswersToMyQuestions")
 	@ResponseBody
 	public List<ArrayList<String>> getAnswersToMyQuestions(@RequestParam String tokenId, HttpServletResponse res){
@@ -459,6 +533,13 @@ public class ApiController {
 		return result;
 	}
 	
+	/**
+	 * Identify whether the user is institute or not.
+	 * 
+	 * @param email The email of the logged in user.
+	 * @param res The response that is sent to the client.
+	 * @return The type of the user.
+	 */
 	@RequestMapping(method=RequestMethod.GET ,path="/getType")
 	@ResponseBody
 	public String getType(@RequestParam String email, HttpServletResponse res) {
@@ -487,6 +568,13 @@ public class ApiController {
 		return ret;
 	}
 	
+	/**
+	 * Finds the number of questions asked and answered by the user.
+	 * 
+	 * @param tokenId Identifies the session of the user.
+	 * @param res The response that is sent to the client.
+	 * @return The number of questions asked and answered by the user.
+	 */
 	@RequestMapping(method=RequestMethod.GET ,path="/getQuestionsInfo")
 	@ResponseBody
 	public List<String> getQuestionsInfo(@RequestParam String tokenId, HttpServletResponse res) {

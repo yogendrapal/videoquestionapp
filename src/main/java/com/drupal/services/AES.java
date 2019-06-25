@@ -10,9 +10,25 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
 public class AES {
+	/**
+	 * This instance specifies a secret key in a provider-independent fashion.
+	 */
 	private static SecretKeySpec secretKey;
+	
+	
+    /**
+     * Used to store the myKey in the form of byte array required for encryption / decryption.
+     */
     private static byte[] key;
  
+    /**
+     * Sets the value of the byte array <strong>key</strong>
+     * <p>
+     * The myKey value is converted to byte array and only the first 16 elements of the array are taken.
+     * The remaining elements are removed.This is required to initialize the secretKey; 
+     * 
+     * @param myKey The unique key used for encryption / decryption.
+     */
     public static void setKey(String myKey)
     {
         MessageDigest sha = null;
@@ -31,6 +47,16 @@ public class AES {
         }
     }
  
+    /**
+     * Encrypts the given string.
+     * <p>
+     * It first sets the value of key and secretKey by calling the setKey() function.
+     * It then encrypts the data using the secretKey. 
+     * 
+     * @param strToEncrypt It represents the string to be encrypted. 
+     * @param secret It is used to generate the key and secretKey.
+     * @return
+     */
     public static String encrypt(String strToEncrypt, String secret)
     {
         try
@@ -47,6 +73,16 @@ public class AES {
         return null;
     }
  
+    /**
+     * Decrypts the given string.
+     * <p>
+     * It first sets the value of key and secretKey by calling the setKey() function.
+     * It then encrypts the data using the secretKey.
+     * 
+     * @param strToDecrypt It represents the string to be decrypted. 
+     * @param secret It is used to generate the key and secretKey.
+     * @return
+     */
     public static String decrypt(String strToDecrypt, String secret)
     {
         try
