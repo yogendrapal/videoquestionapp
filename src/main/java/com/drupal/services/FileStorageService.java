@@ -18,10 +18,29 @@ import java.nio.file.StandardCopyOption;
 
 @Service
 public class FileStorageService {
+	
+	
+	/**
+	 * Stores the location of the directory in which the uploaded questions are stored.
+	 */
 	private final Path fileStorageLocation;
+	/**
+	 * Stores the location of the directory in which profile pictures are stored.
+	 */
 	private final Path profilePicPath;
+	/**
+	 * Stores the location of the directory where the answer videos are stored. 
+	 */
 	private final Path answersPath;
 	
+    /**
+     * Constructor 
+     * <p>
+     * Accepts the FileStorageProperties as argument
+     * and initializes a new FileStorageService object.
+     * 
+     * @param fileStorageProperties Keeps information as to in which directory a particular file is saved.
+     */
     @Autowired
     public FileStorageService(FileStorageProperties fileStorageProperties) {
         this.fileStorageLocation = Paths.get(fileStorageProperties.getUploadDir())
@@ -45,6 +64,11 @@ public class FileStorageService {
         }
     }
 
+    /**
+     * Stores file in the correct directory. 
+     * @param file File to be stored in the appropriate directory.
+     * @return Description of what error may have occurred while storing the file or a success message if no error.
+     */
     public String storeFile(MultipartFile file) {
         // Normalize file name
         String fileName = StringUtils.cleanPath(file.getOriginalFilename());
@@ -67,6 +91,12 @@ public class FileStorageService {
         }
     }
 
+    /**
+     * Loads the file passed in as argument into a Resource object. 
+     * @param fileName The name of the file to be loaded as the Resource object.
+     * @param fileType The type of the file to be loaded as the Resource object.
+     * @return The resource associated with the file name.
+     */
     public Resource loadFileAsResource(String fileName, String fileType) {
         try {
             Path filePath;
@@ -91,17 +121,5 @@ public class FileStorageService {
             throw new RuntimeException("File not found " + fileName, ex);
         }
     }
-    
-//    public void extractImage() {
-//    	FFmpegFrameGrabber g = new FFmpegFrameGrabber("C:\\JavaEE\\New Project\\tape\\src\\main\\webapp\\web-resources\\videos\\vid.mp4");
-//        g.setFormat("mp4");
-//        g.start();
-//
-//        for (int i = 0 ; i < 50 ; i++) {
-//            ImageIO.write(g.grab()., "png", new File("C:\\JavaEE\\New Project\\tape\\src\\main\\webapp\\web-resources\\thumbnails\\video-frame-" + System.currentTimeMillis() + ".png"));
-//        }
-//
-//         g.stop();
-//
-//    }
+
 }
