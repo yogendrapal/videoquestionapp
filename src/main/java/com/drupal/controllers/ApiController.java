@@ -340,7 +340,7 @@ public class ApiController {
 	 * @param res   The response that is sent to the client.
 	 * @return Returns a statement that says whether the verification mail is sent
 	 *         or not.
-	 * @throws IOException
+	 * @throws IOException if the server is unable to send/update res
 	 */
 	@RequestMapping(path = "confirmtoken", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
@@ -592,5 +592,58 @@ public class ApiController {
 		result.add(String.valueOf(answers.size()));
 		System.out.println(result.toString());
 		return result;
+	}
+
+	/**
+	 * Adds the <b>device id </b> to this institute. It receives email and password
+	 * along with device Id. If authenticated and if email of this institute is
+	 * verified, the <i>deviceId</i> is added to the list of devices of this
+	 * institute
+	 * 
+	 * @param email    the email id of this institute
+	 * @param password the password of this institute
+	 * @param deviceId the deviceid which has to be added to this institute
+	 * @param res      the http response sent to the client
+	 * @return the success or error message
+	 */
+	@RequestMapping(path = "deviceReg", method = RequestMethod.POST, produces = "application/json")
+	@ResponseBody
+	public String deviceReg(@RequestPart String email, @RequestPart String password, String deviceId,
+			HttpServletResponse res) {
+		Institute inst = instituteRepo.findByEmail(email);
+		if (inst != null) {
+			if (inst.isEmailVerified()) {
+				if (AES.encrypt(password, StudentRestApiApplication.SECRET_KEY).equals(inst.getPassword())) {
+					String name = inst.getName();
+//				String instId = inst.getId();
+					inst.addDevice(deviceId);
+					instituteRepo.save(inst);
+					return "{\"Institute Id\" : \"" + inst.getId() + "\",\"Name\":\"" + name + "\"}";
+				} else {
+					try {
+						res.sendError(403, "Incorrect password");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					return "Incorrect password";
+				}
+			} else {
+				try {
+					res.sendError(403, "Email not verified");
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		} else {
+			try {
+				res.sendError(403, "Institute with this email doesn't exist");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return "{\"Error\":\"Institute with this email does't exist\"}";
+		}
+		return null;
 	}
 }

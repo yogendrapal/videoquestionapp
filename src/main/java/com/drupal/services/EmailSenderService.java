@@ -19,10 +19,10 @@ public class EmailSenderService {
     /**
      * Initializes an EmailSenderService.
      * 
-     * Initializes a javaMailSender
+     * Initializes a javaMailSender.
      * javaMailSender is automatically provided by Spring boot
      * 
-     * @param javaMailSender
+     * @param javaMailSender {@link org.springframework.mail.javamail.JavaMailSender} which actually sends the mail
      */
     @Autowired
     public EmailSenderService(JavaMailSender javaMailSender) {
@@ -34,7 +34,7 @@ public class EmailSenderService {
      * 
      * The email object contains all details of the mail.
      * 
-     * @param email
+     * @param email the {@link org.springframework.mail.SimpleMailMessage} to send
      */
     @Async
     public void sendEmail(SimpleMailMessage email) {

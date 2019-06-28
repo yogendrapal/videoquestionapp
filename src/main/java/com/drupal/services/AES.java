@@ -55,7 +55,7 @@ public class AES {
      * 
      * @param strToEncrypt It represents the string to be encrypted. 
      * @param secret It is used to generate the key and secretKey.
-     * @return
+     * @return the eccypted String
      */
     public static String encrypt(String strToEncrypt, String secret)
     {
@@ -81,7 +81,7 @@ public class AES {
      * 
      * @param strToDecrypt It represents the string to be decrypted. 
      * @param secret It is used to generate the key and secretKey.
-     * @return
+     * @return the decrypted String
      */
     public static String decrypt(String strToDecrypt, String secret)
     {

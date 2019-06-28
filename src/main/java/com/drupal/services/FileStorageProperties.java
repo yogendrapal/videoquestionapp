@@ -23,7 +23,7 @@ public class FileStorageProperties {
 	/**
 	 * Path where the answers of the user are stored is returned
 	 * 
-	 * @returns path to stored answers
+	 * @return path to stored answers
 	 */
 	public String getAnswersDir() {
 		return answersDir;
@@ -39,7 +39,7 @@ public class FileStorageProperties {
 	}
 
 	/**
-	 * @returns path to the profile picture
+	 * @return path to the profile picture
 	 */
 	public String getProfilePicDir() {
 		return profilePicDir;
@@ -55,7 +55,7 @@ public class FileStorageProperties {
 	}
 
 	/**
-	 * @returns path to the uploaded questions of the user
+	 * @return path to the uploaded questions of the user
 	 */
 	public String getUploadDir() {
 		return uploadDir;

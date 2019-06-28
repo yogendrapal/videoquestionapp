@@ -24,7 +24,7 @@ public interface TokenRepo extends MongoRepository<Token, String>{
 	 * <p>
 	 * Note: it is guaranteed that there is only one or no token for one user-id.
 	 * </p>
-	 * @param userId
+	 * @param userId the user-id for which associated token is to be found
 	 * @return the token associated with userId
 	 */
 	Token findByUserId(String userId);

@@ -50,7 +50,9 @@ public class InstituteController {
 	@ResponseBody
 	public String signupAsInstitute(@RequestPart String name, @RequestPart String address,@RequestPart String email, @RequestPart String password, @RequestPart String phone,HttpServletResponse res) {
 		if (instituteRepo.findByEmail(email) == null) {
+			System.out.println("inside signup");
 			Institute inst = postUser(name, address ,email, password, phone);
+			System.out.println(inst.getId());
 			eventPublisher.publishEvent(new OnRegistrationSuccessEvent(inst.getId(),StudentRestApiApplication.RegistrationTypes.institute));
 			return "{\"Success\" : \"User created successfully\"}";
 //			return login(email, password, res);
@@ -83,7 +85,7 @@ public class InstituteController {
 		System.out.println("inside users post");
 		
 		String encryptedPass = AES.encrypt(password, StudentRestApiApplication.SECRET_KEY);
-		Institute inst = new Institute(name, address, phone, encryptedPass,email);
+		Institute inst = new Institute(name, address, phone, encryptedPass,email, null);
 		instituteRepo.save(inst);
 		System.out.println((inst.getId()));
 		eventPublisher.publishEvent(new OnRegistrationSuccessEvent(inst.getId(),StudentRestApiApplication.RegistrationTypes.institute));

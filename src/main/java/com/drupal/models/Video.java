@@ -16,6 +16,7 @@ public class Video {
 	/**
 	 * The path of the video.
 	 */
+	boolean isDevice = false;
 	String path;
 	/**
 	 * The id of the user who recorded the video.
@@ -100,6 +101,12 @@ public class Video {
 		return tags;
 	}
 
+	public boolean isDevice() {
+		return isDevice;
+	}
+	public void setDevice(boolean isDevice) {
+		this.isDevice = isDevice;
+	}
 	/**
 	 * Sets the tags associated to the video.
 	 * 

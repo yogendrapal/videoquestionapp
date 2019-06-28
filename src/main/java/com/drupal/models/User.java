@@ -79,7 +79,7 @@ public class User {
 	 * Note: The age is not automatically updated and the user has to manually update it
 	 * 
 	 * @param age the age of the user as mentioned by him/her
-	 * @see getAge()
+	 * @see getAge
 	 */
 	public void setAge(int age) {
 		this.age = age;
@@ -136,7 +136,7 @@ public class User {
 	 * 
 	 * Note: This method is not intended to be used manually as it may result in overlapping ids.
 	 * 
-	 * @param id
+	 * @param id the new id of this user
 	 */
 	public void setId(String id) {
 		this.id = id;

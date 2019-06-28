@@ -20,7 +20,8 @@ import com.drupal.models.VerificationToken;
  * This listener listen for a OnRegistrationSuccessEvent and uses a MailSender to send email verification mail if event occurs.
  * 
  * @author pratik, sai, henil, shweta
- * @see OnRegistrationSuccessEvent, MailSender
+ * @see OnRegistrationSuccessEvent
+ * @see org.springframework.mail.MailSender
  */
 @Component
 public class RegistrationEmailListener implements ApplicationListener<OnRegistrationSuccessEvent> {
@@ -48,8 +49,8 @@ public class RegistrationEmailListener implements ApplicationListener<OnRegistra
 	 *
 	 * @param event the event which is thrown on successful registration/Creation of a User/Institute account
 	 * @see confirmRegistration 
-	 * @see User
-	 * @see Institute
+	 * @see com.drupal.models.User
+	 * @see com.drupal.models.Institute
 	 */
 	@Override
 	public void onApplicationEvent(OnRegistrationSuccessEvent event) {
@@ -66,7 +67,8 @@ public class RegistrationEmailListener implements ApplicationListener<OnRegistra
 	 * </ol>
 	 * 
 	 * @param event the event which is thrown on successful registration/Creation of a User/Institute account
-	 * @see MailSender, VerificationToken
+	 * @see org.springframework.mail.MailSender
+	 * @see com.drupal.models.VerificationToken
 	 */
 	private void confirmRegistration(OnRegistrationSuccessEvent event) {
 		String tokenId = UUID.randomUUID().toString();

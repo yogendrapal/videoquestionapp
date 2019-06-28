@@ -5,9 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -37,10 +35,12 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.drupal.StudentRestApiApplication;
 import com.drupal.UploadFileResponse;
 import com.drupal.dao.AnswerRepo;
+import com.drupal.dao.InstituteRepo;
 import com.drupal.dao.TokenRepo;
 import com.drupal.dao.UserRepo;
 import com.drupal.dao.VideoRepo;
 import com.drupal.models.Answer;
+import com.drupal.models.Institute;
 import com.drupal.models.Token;
 import com.drupal.models.User;
 import com.drupal.models.Video;
@@ -74,6 +74,8 @@ public class FileController {
 	@Autowired
 	VideoTagsFetcherService videoTagsFetcherService;
 
+	@Autowired
+	InstituteRepo instituteRepo;
 	
 	@Autowired
 	VideoRepo videoRepo;
@@ -107,8 +109,6 @@ public class FileController {
 	public UploadFileResponse uploadFile(@RequestParam("video") MultipartFile file, @RequestPart String tokenId, HttpServletResponse res, @ModelAttribute() VideoTags tags) {
 		System.out.println("Uploading");
 		System.out.println(tokenId);
-		String fileName = fileStorageService.storeFile(file);
-		System.out.println(fileName);
 		String userId = tokenController.getUserIdFrom(tokenId);
 		if (userId == StudentRestApiApplication.NOT_FOUND) {
 			try {
@@ -118,6 +118,8 @@ public class FileController {
 			}
 			return null;
 		}
+		
+		String fileName = fileStorageService.storeFile(file);
 		String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/downloadFile/").path(fileName).toUriString();
 		System.out.println(Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize().resolve(fileName));
 		String path = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize().resolve(fileName).toString();
@@ -126,8 +128,6 @@ public class FileController {
 			System.out.println("Saving");
 			videoRepo.save(new Video(path, userId, tags.getTags()));
 			Thread thread = new Thread(new Runnable() {
-
-				
 				@Override
 				public void run() {
 					System.out.println("fetcher thread started");
@@ -136,7 +136,6 @@ public class FileController {
 				}
 			});
 			thread.start();
-			//videoTagsFetcherService.fetchDataFor(videoRepo.findByPath(path));
 		}
 		return new UploadFileResponse(fileName, fileDownloadUri, file.getContentType(), file.getSize());
 	}
@@ -384,5 +383,51 @@ public class FileController {
 		Answer ans  = answerRepo.findByPath(answerPath);
 		String userEmail = userRepo.findById(ans.getUserId()).orElse(null).getEmail();
 		return apiController.getProfileDetails(userEmail, res);
+	}
+	
+	/**
+	 * @param file The video question that is to be saved.
+	 * @param videoId The Id of the video.
+	 * @param deviceId The Id of the RasberryPi device.
+	 * @param instituteId The id of the institute which contains the device
+	 * @param res the http response sent to the client
+	 * @return The string which indicates whether the video was uploaded or not.
+	 */
+	@RequestMapping(path = "uploadDeviceQuestion" , produces = "application/json")
+	@ResponseBody
+	public String uploadDeviceQuestion(@RequestPart MultipartFile file,@RequestPart String videoId , @RequestPart String deviceId, @RequestPart String instituteId, HttpServletResponse res) {
+		System.out.println("in upload device question");
+		Institute institute =  instituteRepo.findById(instituteId).orElse(null);
+		if(institute == null) {
+			System.out.println("institute is null");
+			try {
+				res.sendError(400, "No Such institute");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return "{\"Error\":\"Question doesn't exist\"}";
+		}else {
+			System.out.println("saving video");
+			String fileName = fileStorageService.storeFile(file);
+			String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/downloadFile/").path(fileName).toUriString();
+			String path = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize().resolve(fileName).toString();
+			Video v = videoRepo.findByPath(path);
+			if(v == null) {
+				videoRepo.save(new Video(path, instituteId,new ArrayList<String>()));
+				v = videoRepo.findByPath(path);
+				v.setDevice(true);
+				v.setId(videoId);
+				videoRepo.save(v);
+				Thread thread = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						videoTagsFetcherService.fetchDataFor(videoRepo.findByPath(path));
+					}
+				});
+				//thread.start();
+			}
+			System.out.println("vid saved");
+		}
+		return "{\"Success\":\"Answer uploaded successfully\"}";
 	}
 }
