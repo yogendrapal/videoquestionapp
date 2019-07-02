@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -47,6 +49,7 @@ import com.drupal.models.Video;
 import com.drupal.models.VideoTags;
 import com.drupal.services.FileStorageProperties;
 import com.drupal.services.FileStorageService;
+import com.drupal.services.UploadingAnswerForDevice;
 import com.drupal.services.VideoTagsFetcherService;
 
 @Controller
@@ -59,6 +62,9 @@ public class FileController {
 	@Value("${file.answers-dir}")
 	private String answersDir;
 
+	@Autowired
+	UploadingAnswerForDevice uploadingAnswerForDevice;
+	
 	@Autowired
 	ApiController apiController;
 	
@@ -91,7 +97,9 @@ public class FileController {
 
 	@Autowired
 	UserRepo userRepo;
-
+	
+	String userId ;
+	Answer answerToUpload ;
 	/**
 	 * Uploads the file to the server.
 	 * 
@@ -126,7 +134,8 @@ public class FileController {
 		Video v = videoRepo.findByPath(path);
 		if (v == null) {
 			System.out.println("Saving");
-			videoRepo.save(new Video(path, userId, tags.getTags()));
+			String[] tempTags = {"Society & Culture"};
+			videoRepo.save(new Video(path, userId, Arrays.asList(tempTags))) ;//tags.getTags()));
 			Thread thread = new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -135,7 +144,7 @@ public class FileController {
 					System.out.println("fetcher thread finishing");
 				}
 			});
-			thread.start();
+//			thread.start();
 		}
 		return new UploadFileResponse(fileName, fileDownloadUri, file.getContentType(), file.getSize());
 	}
@@ -304,69 +313,123 @@ public class FileController {
 	@RequestMapping("uploadAnswer")
 	@ResponseBody
 	public String uploadAnswerVideo(@RequestPart("video") MultipartFile file, @RequestPart String tokenId,
-			HttpServletResponse res, String questionName) {
-		System.out.println("answer uploading, "+ file);
-		Token token = tokenRepo.findById(tokenId).orElse(null);
-		if (token == null) {
-			System.out.println("token is null");
+			HttpServletResponse res, String questionName,String deviceId) {
+		
+		
+		
+		
+		if(deviceId != null) {
+			
+			List<Institute> institutes = instituteRepo.findAll();
+			List<String> deviceIds;
+			int numberOfInstitutes = institutes.size();
+			
+			int numberOfDevices;
+			boolean instituteFound = false;
+			
+			for(int i=0;i<numberOfInstitutes;i++) {
+				if(!instituteFound) {
+					deviceIds = institutes.get(i).getDevices();
+					numberOfDevices = deviceIds.size();
+					for(int j=0;j<numberOfDevices;j++) {
+						if(deviceIds.get(j).equals(deviceId)) {
+							instituteFound = true;
+							userId = institutes.get(i).getId();
+							break;
+						}
+					}
+				}else
+					break;
+			}
+			
+			if(userId==null) {
+				return "Device Id is invalid";
+			}
+		}
+		else {
+			System.out.println("answer uploading, "+ file);
+			Token token = tokenRepo.findById(tokenId).orElse(null);
+			if (token == null) {
+				System.out.println("token is null");
+				try {
+					res.sendError(400, "Invalid token id");
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				return "{\"Error\":\"Invalid token id\"}";
+			}
+			 userId = tokenController.getUserIdFrom(tokenId);
+			if (userId == StudentRestApiApplication.NOT_FOUND) {
+				try {
+					System.out.println("token is invalid");
+					res.sendError(400, "Invalid token or expired token..Login again");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				return "{\"Error\":\"Invalid token id\"}";
+			}
+		}	
+		
+		
+		
+			String questionPath = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize()
+					.resolve(questionName).toString();
+			Video question = videoRepo.findByPath(questionPath);
+			if (question == null) {
+				System.out.println(questionName+ " doesnt exist");
+				try {
+					res.sendError(400, "Question doesn't exist");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				return "{\"Error\":\"Question doesn't exist\"}";
+			}
+			String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+			Path targetLocation = Paths.get(answersDir).toAbsolutePath().normalize();
+			targetLocation = targetLocation.resolve(fileName);
+			System.out.println(targetLocation.toString());
+			if (targetLocation.toFile().exists()) {
+				System.out.println("File already exists....overwriting");
+			}
 			try {
-				res.sendError(400, "Invalid token id");
+				Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+				String path = Paths.get(fileStorageProperties.getAnswersDir()).toAbsolutePath().normalize()
+						.resolve(fileName).toString();
+				Answer ans = answerRepo.findByPath(path);
+				if (ans == null) {
+					System.out.println("Saving");
+					answerToUpload = new Answer(path, userId, question.getId());
+					answerRepo.save(answerToUpload);
+					if(deviceId!=null && userId!=null) {
+						
+						Thread thread = new Thread(new Runnable() {
+							@Override
+							public void run() {
+								System.out.println("fetcher thread started");
+								uploadingAnswerForDevice.uploadingAnswerToDeviceServer(file,answerToUpload.getQuestionId(),userId);
+								System.out.println("fetcher thread finishing");
+							}
+						});
+						thread.start();
+					}
+					return "{\"Success\":\"Answer uploaded successfully\"}";
+					
+				}
+				
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				try {
+					res.sendError(500, "Unable to upload answer");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				return "{\"Error\":\"Answer not uploaded\"}";
 			}
-			return "{\"Error\":\"Invalid token id\"}";
+			
+			
+			
+			return null;
 		}
-		String userId = tokenController.getUserIdFrom(tokenId);
-		if (userId == StudentRestApiApplication.NOT_FOUND) {
-			try {
-				System.out.println("token is invalid");
-				res.sendError(400, "Invalid token or expired token..Login again");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			return "{\"Error\":\"Invalid token id\"}";
-		}
-		String questionPath = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize()
-				.resolve(questionName).toString();
-		Video question = videoRepo.findByPath(questionPath);
-		if (question == null) {
-			System.out.println(questionName+ " doesnt exist");
-			try {
-				res.sendError(400, "Question doesn't exist");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			return "{\"Error\":\"Question doesn't exist\"}";
-		}
-		String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-		Path targetLocation = Paths.get(answersDir).toAbsolutePath().normalize();
-		targetLocation = targetLocation.resolve(fileName);
-		System.out.println(targetLocation.toString());
-		if (targetLocation.toFile().exists()) {
-			System.out.println("File already exists....overwriting");
-		}
-		try {
-			Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-			String path = Paths.get(fileStorageProperties.getAnswersDir()).toAbsolutePath().normalize()
-					.resolve(fileName).toString();
-			Answer ans = answerRepo.findByPath(path);
-			if (ans == null) {
-				System.out.println("Saving");
-				answerRepo.save(new Answer(path, userId, question.getId()));
-				return "{\"Success\":\"Answer uploaded successfully\"}";
-			}
-		} catch (IOException e) {
-			try {
-				res.sendError(500, "Unable to upload answer");
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-			return "{\"Error\":\"Answer not uploaded\"}";
-		}
-		return null;
-	}
-	
 	/**
 	 * Gives the user details for the ansName
 	 * 
@@ -430,4 +493,5 @@ public class FileController {
 		}
 		return "{\"Success\":\"Answer uploaded successfully\"}";
 	}
+	
 }

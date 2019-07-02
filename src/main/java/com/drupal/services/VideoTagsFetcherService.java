@@ -5,6 +5,7 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -40,6 +41,12 @@ public class VideoTagsFetcherService {
 	@Autowired
 	VideoRepo videoRepo;
 	
+	@Value("${env.tags_fetch_ip}")
+	private String tagsFetchIp;
+	
+	@Value("${env.tags_fetch_port}")
+	private String tagsFetchPort;
+	
 	/**
 	 * Fetches the data(tags) for the video specified by <b>video</b>.
 	 * 
@@ -65,7 +72,7 @@ public class VideoTagsFetcherService {
 		
 		HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 		 
-		String serverUrl = "http://10.196.13.169:3000/upload";
+		String serverUrl = "http://"+tagsFetchIp+":"+tagsFetchPort+"/upload";
 		 
 		RestTemplate restTemplate = new RestTemplate();
 		ResponseEntity<String> response  = restTemplate.postForEntity(serverUrl, requestEntity, String.class);

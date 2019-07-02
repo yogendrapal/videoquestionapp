@@ -419,10 +419,12 @@ public class ApiController {
 			for (int j = 0; j < vidLen; j++) {
 				Video v = videos.get(j);
 				List<String> tags = v.getTags();
-				if (tags.contains(cur)) {
-					if (!result.contains(v.getId()) && !v.getUserId().equals(uid)) {
-						System.out.println(v.getId());
-						result.add(v.getPath());
+				if (tags != null) { // tags are null at the beginning
+					if (tags.contains(cur)) {
+						if (!result.contains(v.getId()) && !v.getUserId().equals(uid)) {
+							System.out.println(v.getId());
+							result.add(v.getPath());
+						}
 					}
 				}
 			}

@@ -29,6 +29,9 @@ public class RegistrationEmailListener implements ApplicationListener<OnRegistra
 	@Value("${env.ip}")
 	private String ip;
 	
+	@Value("${env.port}")
+	private String port;
+	
 	@Autowired
 	private MailSender mailSender;
 
@@ -89,7 +92,7 @@ public class RegistrationEmailListener implements ApplicationListener<OnRegistra
 		System.out.println("AFTER INSTITUTE WAS FOUND");
 		System.out.println(email.toString());
 		email.setSubject("Confirm registration to videoquestion app");
-		email.setText(message + "http://"+ip+":8080/confirmtoken?type="+event.type+"&token=" + tokenId + trailingMessage);
+		email.setText(message + "http://"+ip+":"+port+"/confirmtoken?type="+event.type+"&token=" + tokenId + trailingMessage);
 		try {
 			mailSender.send(email);
 		} catch (Exception e) {
