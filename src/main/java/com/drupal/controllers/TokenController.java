@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.drupal.StudentRestApiApplication;
+import com.drupal.dao.InstituteRepo;
 import com.drupal.dao.TokenRepo;
 import com.drupal.dao.UserRepo;
+import com.drupal.models.Institute;
 import com.drupal.models.Token;
 import com.drupal.models.User;
 
@@ -26,6 +28,9 @@ public class TokenController {
 	
 	@Autowired 
 	UserRepo userRepo;
+	
+	@Autowired
+	InstituteRepo instituteRepo;
 
 	/**Creates a new token for the new session of the user with id-userId.
 	 * <p>
@@ -56,7 +61,12 @@ public class TokenController {
 		
 			User user = userRepo.findByEmail(email);
 			if (user == null || !validateToken(id, user.getId())) {
-				return false;
+				Institute ins = instituteRepo.findByEmail(email);
+				if(ins==null || !validateToken(id, ins.getId())) {
+					return false;
+				}
+				tokenRepo.deleteById(id);
+				return true;
 			} else {
 				tokenRepo.deleteById(id);
 				return true;

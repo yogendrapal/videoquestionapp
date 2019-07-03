@@ -648,4 +648,27 @@ public class ApiController {
 		}
 		return null;
 	}
+	
+	
+	@RequestMapping(path = "/getUploadedQuestions" , method = RequestMethod.GET)
+	@ResponseBody
+	public List<String> getUploadedQuestions(@RequestParam String tokenId, HttpServletResponse res){
+		String userId = tokenController.getUserIdFrom(tokenId);
+		if(userId == null) {
+			try {
+				res.sendError(400, "Invalid Token");
+			} catch (IOException e) {
+				System.out.println(e);
+			}
+			return null;
+		}
+		List<String> result = new ArrayList<String>();
+		List<Video> videos = videoRepo.findByUserId(userId);
+		for(Video v : videos) {
+			result.add(v.getPath());
+		}
+		System.out.println("LLLL");
+		System.out.println(result.toString());
+		return result;
+	}
 }

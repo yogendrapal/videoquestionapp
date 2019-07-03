@@ -13,10 +13,20 @@ public class Video {
 	 */
 	@Id
 	String id;
+	
+	/**
+	 * The topic related to video
+	 */
+	String topic;
+	
+	
+	/**
+	 * Whether video is from a device.
+	 */
+	boolean isDevice = false;
 	/**
 	 * The path of the video.
 	 */
-	boolean isDevice = false;
 	String path;
 	/**
 	 * The id of the user who recorded the video.
@@ -115,4 +125,20 @@ public class Video {
 	public void setTags(List<String> tags) {
 		this.tags = tags;
 	}
+	
+	/**
+	 * Returns the topic of the video.
+	 * @return the topic of the video
+	 */
+	public String getTopic() {
+		return topic;
+	}
+	/**
+	 * Sets the topic of the video.
+	 * @param topic the new topic of the video
+	 */
+	public void setTopic(String topic) {
+		this.topic = topic;
+	}
+	
 }

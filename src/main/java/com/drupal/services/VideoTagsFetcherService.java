@@ -19,11 +19,11 @@ import org.springframework.web.client.RestTemplate;
 import com.drupal.dao.VideoRepo;
 import com.drupal.models.Video;
 
-
 /**
  * A service which fetches tags for a video by using another api.
  * 
  * This service is supposed to be run in a thread as it is time intensive.
+ * 
  * @author pratik,henil,sai,Shweta
  *
  */
@@ -34,19 +34,19 @@ public class VideoTagsFetcherService {
 	 */
 	@Autowired
 	FileStorageService fileStorageService;
-	
+
 	/**
 	 * 
 	 */
 	@Autowired
 	VideoRepo videoRepo;
-	
+
 	@Value("${env.tags_fetch_ip}")
 	private String tagsFetchIp;
-	
+
 	@Value("${env.tags_fetch_port}")
 	private String tagsFetchPort;
-	
+
 	/**
 	 * Fetches the data(tags) for the video specified by <b>video</b>.
 	 * 
@@ -68,24 +68,44 @@ public class VideoTagsFetcherService {
 		Resource vidResource = fileStorageService.loadFileAsResource(vidPath, "video");
 		
 		body.add("video", vidResource);
-		body.add("id", 1);
+		body.add("id", video.getId());
 		
 		HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 		 
-		String serverUrl = "http://"+tagsFetchIp+":"+tagsFetchPort+"/upload";
+		String serverUrl = "http://"+tagsFetchIp+":"+tagsFetchPort+"/drupal/upload";
 		 
 		RestTemplate restTemplate = new RestTemplate();
 		ResponseEntity<String> response  = restTemplate.postForEntity(serverUrl, requestEntity, String.class);
+		System.out.println("response" + response);
 		String responseBody = response.getBody();
 		System.out.println(responseBody);
 		JSONObject jsonResponse = new JSONObject(responseBody);
-		JSONArray emotions  = jsonResponse.getJSONArray("Subjects");
-		video.setTags((List<String>)((Object)emotions.toList()));
+		JSONArray topic = null;
+		try {
+		topic = jsonResponse.getJSONArray("Topic");
+		}
+		catch(Exception e) {
+			
+		}
+		JSONArray keywords = null;
+		try {
+			keywords= jsonResponse.getJSONArray("keyword");
+		}
+		catch(Exception e) {
+			
+		}
+		if(keywords!=null) {
+		video.setTags((List<String>)((Object)keywords.toList()));
+		}
+		if(topic != null) {
+			video.setTopic(topic.get(0).toString());
+		}
+//		video.setTopic(topic);
 		videoRepo.save(video);
 		
 		
 		
 		
 	}
-	
+
 }

@@ -4,10 +4,12 @@ import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -30,21 +32,22 @@ public class UploadingAnswerForDevice {
 	@Value("${env.rasp_port}")
 	private String raspPort;
 	
+	@Autowired
 	FileStorageService fileStorageService;
 	
 	AnswerRepo answerRepo;
 	
-	public  void uploadingAnswerToDeviceServer(MultipartFile file,String questionId,String instituteId) {
+	public  void uploadingAnswerToDeviceServer(Answer file,String questionId,String instituteId) {
 //		String vidPath = video.getPath();
 		
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 		MultiValueMap<String, Object> body
 		  = new LinkedMultiValueMap<>();
-//		Resource vidResource = fileStorageService.loadFileAsResource(vidPath, "video");
+		Resource vidResource = fileStorageService.loadFileAsResource(file.getPath(), "answer");
 		
-		body.add("answer", file);
-//		body.add("questionId", questionId);
+		body.add("file", vidResource);
+//		body.add("questionId", questionId); // Question id is query param
 //		body.add("instituteId" , instituteId );
 		
 		HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
@@ -55,12 +58,18 @@ public class UploadingAnswerForDevice {
 		ResponseEntity<String> response  = restTemplate.postForEntity(serverUrl, requestEntity, String.class);
 		String responseBody = response.getBody();
 		System.out.println(responseBody);
-		if(responseBody=="success") {
+		if(response.getStatusCode()==HttpStatus.OK) {
 			System.out.println("success");
 		}
 		else {
 			System.out.println("failure");
 		}
+//		if(responseBody=="success") {
+//			System.out.println("success");
+//		}
+//		else {
+//			System.out.println("failure");
+//		}
 			
 	}
 	

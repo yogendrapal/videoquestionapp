@@ -134,8 +134,10 @@ public class FileController {
 		Video v = videoRepo.findByPath(path);
 		if (v == null) {
 			System.out.println("Saving");
-			String[] tempTags = {"Society & Culture"};
-			videoRepo.save(new Video(path, userId, Arrays.asList(tempTags))) ;//tags.getTags()));
+			String[] tempTags = {"Society & Culture"}; // TODO remove tempTags
+			Video newVideo = new Video(path, userId, Arrays.asList(tempTags));
+			newVideo.setTopic("Society & Culture");
+			videoRepo.save(newVideo) ;//tags.getTags()));
 			Thread thread = new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -144,7 +146,7 @@ public class FileController {
 					System.out.println("fetcher thread finishing");
 				}
 			});
-//			thread.start();
+			thread.start();
 		}
 		return new UploadFileResponse(fileName, fileDownloadUri, file.getContentType(), file.getSize());
 	}
@@ -313,40 +315,50 @@ public class FileController {
 	@RequestMapping("uploadAnswer")
 	@ResponseBody
 	public String uploadAnswerVideo(@RequestPart("video") MultipartFile file, @RequestPart String tokenId,
-			HttpServletResponse res, String questionName,String deviceId) {
-		
-		
-		
-		
-		if(deviceId != null) {
-			
-			List<Institute> institutes = instituteRepo.findAll();
-			List<String> deviceIds;
-			int numberOfInstitutes = institutes.size();
-			
-			int numberOfDevices;
-			boolean instituteFound = false;
-			
-			for(int i=0;i<numberOfInstitutes;i++) {
-				if(!instituteFound) {
-					deviceIds = institutes.get(i).getDevices();
-					numberOfDevices = deviceIds.size();
-					for(int j=0;j<numberOfDevices;j++) {
-						if(deviceIds.get(j).equals(deviceId)) {
-							instituteFound = true;
-							userId = institutes.get(i).getId();
-							break;
-						}
-					}
-				}else
-					break;
+			HttpServletResponse res, String questionName) {
+		String questionPath = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize()
+				.resolve(questionName).toString();
+		Video question = videoRepo.findByPath(questionPath);
+		if (question == null) {
+			System.out.println(questionName+ " doesnt exist");
+			try {
+				res.sendError(400, "Question doesn't exist");
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			
-			if(userId==null) {
-				return "Device Id is invalid";
-			}
+			return "{\"Error\":\"Question doesn't exist\"}";
 		}
-		else {
+		boolean isDevice = question.isDevice();
+
+//		if(isDevice) {
+//			
+////			List<Institute> institutes = instituteRepo.findAll();
+////			List<String> deviceIds;
+////			int numberOfInstitutes = institutes.size();
+////			
+////			int numberOfDevices;
+////			boolean instituteFound = false;
+////			
+////			for(int i=0;i<numberOfInstitutes;i++) {
+////				if(!instituteFound) {
+////					deviceIds = institutes.get(i).getDevices();
+////					numberOfDevices = deviceIds.size();
+////					for(int j=0;j<numberOfDevices;j++) {
+////						if(deviceIds.get(j).equals(deviceId)) {
+////							instituteFound = true;
+////							userId = institutes.get(i).getId();
+////							break;
+////						}
+////					}
+////				}else
+////					break;
+////			}
+////			
+////			if(userId==null) {
+////				return "Device Id is invalid";
+////			}
+//		}
+//		else {
 			System.out.println("answer uploading, "+ file);
 			Token token = tokenRepo.findById(tokenId).orElse(null);
 			if (token == null) {
@@ -369,22 +381,11 @@ public class FileController {
 				}
 				return "{\"Error\":\"Invalid token id\"}";
 			}
-		}	
+//		}	
 		
 		
 		
-			String questionPath = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize()
-					.resolve(questionName).toString();
-			Video question = videoRepo.findByPath(questionPath);
-			if (question == null) {
-				System.out.println(questionName+ " doesnt exist");
-				try {
-					res.sendError(400, "Question doesn't exist");
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				return "{\"Error\":\"Question doesn't exist\"}";
-			}
+			
 			String fileName = StringUtils.cleanPath(file.getOriginalFilename());
 			Path targetLocation = Paths.get(answersDir).toAbsolutePath().normalize();
 			targetLocation = targetLocation.resolve(fileName);
@@ -401,13 +402,13 @@ public class FileController {
 					System.out.println("Saving");
 					answerToUpload = new Answer(path, userId, question.getId());
 					answerRepo.save(answerToUpload);
-					if(deviceId!=null && userId!=null) {
+					if(isDevice) {
 						
 						Thread thread = new Thread(new Runnable() {
 							@Override
 							public void run() {
 								System.out.println("fetcher thread started");
-								uploadingAnswerForDevice.uploadingAnswerToDeviceServer(file,answerToUpload.getQuestionId(),userId);
+								uploadingAnswerForDevice.uploadingAnswerToDeviceServer(answerToUpload,answerToUpload.getQuestionId(),userId);
 								System.out.println("fetcher thread finishing");
 							}
 						});
@@ -476,7 +477,10 @@ public class FileController {
 			String path = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize().resolve(fileName).toString();
 			Video v = videoRepo.findByPath(path);
 			if(v == null) {
-				videoRepo.save(new Video(path, instituteId,new ArrayList<String>()));
+				String[] tempTags = {"Society & Culture"};
+				Video newVideo = new Video(path, instituteId, Arrays.asList(tempTags));
+				newVideo.setTopic("Society & Culture");
+				videoRepo.save(newVideo);
 				v = videoRepo.findByPath(path);
 				v.setDevice(true);
 				v.setId(videoId);
