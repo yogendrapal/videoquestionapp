@@ -480,18 +480,20 @@ public class FileController {
 				String[] tempTags = {"Society & Culture"};
 				Video newVideo = new Video(path, instituteId, Arrays.asList(tempTags));
 				newVideo.setTopic("Society & Culture");
+//				videoRepo.save(newVideo);
+				newVideo.setDevice(true);
+				newVideo.setId(videoId);
+//				v = videoRepo.findByPath(path);
+//				v.setDevice(true);
+//				v.setId(videoId);
 				videoRepo.save(newVideo);
-				v = videoRepo.findByPath(path);
-				v.setDevice(true);
-				v.setId(videoId);
-				videoRepo.save(v);
 				Thread thread = new Thread(new Runnable() {
 					@Override
 					public void run() {
 						videoTagsFetcherService.fetchDataFor(videoRepo.findByPath(path));
 					}
 				});
-				//thread.start();
+				thread.start();
 			}
 			System.out.println("vid saved");
 		}

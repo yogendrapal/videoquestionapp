@@ -413,19 +413,20 @@ public class ApiController {
 		String[] interests = u.getInterests();
 		List<Video> videos = videoRepo.findAll();
 		int vidLen = videos.size();
-		int len = interests.length;
+		int len = interests.length;	
 		for (int i = 0; i < len; i++) {
 			String cur = interests[i];
 			for (int j = 0; j < vidLen; j++) {
 				Video v = videos.get(j);
-				List<String> tags = v.getTags();
-				if (tags != null) { // tags are null at the beginning
-					if (tags.contains(cur)) {
+				String topic = v.getTopic();
+//				List<String> tags = v.getTags();
+				if (topic!= null && topic.equals(cur)) { // tags are null at the beginning
+//					if (tags.contains(cur)) {
 						if (!result.contains(v.getId()) && !v.getUserId().equals(uid)) {
 							System.out.println(v.getId());
 							result.add(v.getPath());
 						}
-					}
+//					}
 				}
 			}
 		}

@@ -59,6 +59,7 @@ public class VideoTagsFetcherService {
 	 * @see Video
 	 */
 	public void fetchDataFor(Video video) {
+		System.out.println("in fetch data for started sending request");
 		String vidPath = video.getPath();
 		
 		HttpHeaders headers = new HttpHeaders();
@@ -102,10 +103,7 @@ public class VideoTagsFetcherService {
 		}
 //		video.setTopic(topic);
 		videoRepo.save(video);
-		
-		
-		
-		
+		System.out.println("fetching tags completed");
 	}
 
 }
