@@ -497,7 +497,7 @@ public class FileController {
 			}
 			System.out.println("vid saved");
 		}
-		return "{\"Success\":\"Answer uploaded successfully\"}";
+		return "{\"Success\":\"Question uploaded successfully\"}";
 	}
 	
 }
