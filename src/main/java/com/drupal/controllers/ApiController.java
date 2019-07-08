@@ -413,19 +413,19 @@ public class ApiController {
 		String[] interests = u.getInterests();
 		List<Video> videos = videoRepo.findAll();
 		int vidLen = videos.size();
-		int len = interests.length;	
+		int len = interests.length;
 		for (int i = 0; i < len; i++) {
 			String cur = interests[i];
 			for (int j = 0; j < vidLen; j++) {
 				Video v = videos.get(j);
 				String topic = v.getTopic();
 //				List<String> tags = v.getTags();
-				if (topic!= null && topic.equals(cur)) { // tags are null at the beginning
+				if (topic != null && topic.equals(cur)) { // tags are null at the beginning
 //					if (tags.contains(cur)) {
-						if (!result.contains(v.getId()) && !v.getUserId().equals(uid)) {
-							System.out.println(v.getId());
-							result.add(v.getPath());
-						}
+					if (!result.contains(v.getId()) && !v.getUserId().equals(uid)) {
+						System.out.println(v.getId());
+						result.add(v.getPath());
+					}
 //					}
 				}
 			}
@@ -649,13 +649,12 @@ public class ApiController {
 		}
 		return null;
 	}
-	
-	
-	@RequestMapping(path = "/getUploadedQuestions" , method = RequestMethod.GET)
+
+	@RequestMapping(path = "/getUploadedQuestions", method = RequestMethod.GET)
 	@ResponseBody
-	public List<String> getUploadedQuestions(@RequestParam String tokenId, HttpServletResponse res){
+	public List<String> getUploadedQuestions(@RequestParam String tokenId, HttpServletResponse res) {
 		String userId = tokenController.getUserIdFrom(tokenId);
-		if(userId == null) {
+		if (userId == null) {
 			try {
 				res.sendError(400, "Invalid Token");
 			} catch (IOException e) {
@@ -665,11 +664,32 @@ public class ApiController {
 		}
 		List<String> result = new ArrayList<String>();
 		List<Video> videos = videoRepo.findByUserId(userId);
-		for(Video v : videos) {
+		for (Video v : videos) {
 			result.add(v.getPath());
 		}
 		System.out.println("LLLL");
 		System.out.println(result.toString());
 		return result;
+	}
+
+	@RequestMapping(path = "editInterests", method = RequestMethod.POST, produces = "application/json")
+	@ResponseBody
+	public String editInterests(@RequestPart String email, @ModelAttribute Interests interests,
+			HttpServletResponse res) {
+		if (userRepo.findByEmail(email) == null) {
+			try {
+				res.sendError(400, "User with this email does not exist");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return "{\"Error\" : \"User with this email does not exist\"}";
+		} else {
+			User user = userRepo.findByEmail(email);
+			
+			user.setInterests(interests.getInterests());
+			userRepo.save(user);
+			return "Successfully edited interested";
+		}
 	}
 }
