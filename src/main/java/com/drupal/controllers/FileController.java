@@ -134,9 +134,9 @@ public class FileController {
 		Video v = videoRepo.findByPath(path);
 		if (v == null) {
 			System.out.println("Saving");
-			String[] tempTags = {"Society & Culture"}; // TODO remove tempTags
-			Video newVideo = new Video(path, userId, Arrays.asList(tempTags));
-			newVideo.setTopic("Society & Culture");
+//			String[] tempTags = {"Society & Culture"}; // TODO remove tempTags
+			Video newVideo = new Video(path, userId, null);
+//			newVideo.setTopic("Society & Culture");
 			videoRepo.save(newVideo) ;//tags.getTags()));
 			Thread thread = new Thread(new Runnable() {
 				@Override
@@ -477,9 +477,9 @@ public class FileController {
 			String path = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize().resolve(fileName).toString();
 			Video v = videoRepo.findByPath(path);
 			if(v == null) {
-				String[] tempTags = {"Society & Culture"};
-				Video newVideo = new Video(path, instituteId, Arrays.asList(tempTags));
-				newVideo.setTopic("Society & Culture");
+//				String[] tempTags = {"Society & Culture"};
+				Video newVideo = new Video(path, instituteId, null);
+//				newVideo.setTopic("Society & Culture");
 //				videoRepo.save(newVideo);
 				newVideo.setDevice(true);
 				newVideo.setId(videoId);

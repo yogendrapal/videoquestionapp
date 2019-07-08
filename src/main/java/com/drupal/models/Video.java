@@ -5,21 +5,58 @@ import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-
 @Document
 public class Video {
 	/**
-	 * The unique id assoiated with each video. 
+	 * The unique id assoiated with each video.
 	 */
 	@Id
 	String id;
-	
+
 	/**
 	 * The topic related to video
 	 */
 	String topic;
-	
-	
+
+	/**
+	 * The gender of the person who recorded the video
+	 */
+	String gender;
+
+	/**
+	 * The emotions of the user who recorded the video
+	 */
+	List<String> emotions;
+
+	public Video(String id, String topic, String gender, List<String> emotions, boolean isDevice, String path,
+			String userId, List<String> tags) {
+		super();
+		this.id = id;
+		this.topic = topic;
+		this.gender = gender;
+		this.emotions = emotions;
+		this.isDevice = isDevice;
+		this.path = path;
+		this.userId = userId;
+		this.tags = tags;
+	}
+
+	public String getGender() {
+		return gender;
+	}
+
+	public void setGender(String gender) {
+		this.gender = gender;
+	}
+
+	public List<String> getEmotions() {
+		return emotions;
+	}
+
+	public void setEmotions(List<String> emotions) {
+		this.emotions = emotions;
+	}
+
 	/**
 	 * Whether video is from a device.
 	 */
@@ -36,20 +73,22 @@ public class Video {
 	 * All the topics related to video.
 	 */
 	List<String> tags;
+
 	/**
 	 * Constructor of the class Video
 	 * 
-	 * @param path The path of the video.
+	 * @param path   The path of the video.
 	 * @param userId The userId of the video.
-	 * @param tags The topics of the video.
+	 * @param tags   The topics of the video.
 	 */
 	public Video(String path, String userId, List<String> tags) {
 		this.path = path;
 		this.userId = userId;
 		this.tags = tags;
 	}
+
 	/**
-	 * The userId associated to the video is returned. 
+	 * The userId associated to the video is returned.
 	 * 
 	 * @return the userId associated to the video.
 	 */
@@ -111,12 +150,18 @@ public class Video {
 		return tags;
 	}
 
+	public Video() {
+		super();
+	}
+
 	public boolean isDevice() {
 		return isDevice;
 	}
+
 	public void setDevice(boolean isDevice) {
 		this.isDevice = isDevice;
 	}
+
 	/**
 	 * Sets the tags associated to the video.
 	 * 
@@ -125,20 +170,23 @@ public class Video {
 	public void setTags(List<String> tags) {
 		this.tags = tags;
 	}
-	
+
 	/**
 	 * Returns the topic of the video.
+	 * 
 	 * @return the topic of the video
 	 */
 	public String getTopic() {
 		return topic;
 	}
+
 	/**
 	 * Sets the topic of the video.
+	 * 
 	 * @param topic the new topic of the video
 	 */
 	public void setTopic(String topic) {
 		this.topic = topic;
 	}
-	
+
 }

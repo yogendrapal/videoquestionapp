@@ -121,15 +121,14 @@ public class ApiController {
 						String phone = user.getPhone();
 						String[] interests = user.getInterests();
 						String listString = "[";
-						
-						if(interests!=null && interests.length>0) {
-							for (String s : interests)
-							{
+
+						if (interests != null && interests.length > 0) {
+							for (String s : interests) {
 								listString += s + ",";
 							}
-							listString = listString.substring(0, listString.length() -1);
+							listString = listString.substring(0, listString.length() - 1);
 						}
-						listString+="]";
+						listString += "]";
 						Token token = tokenController.createToken(user.getId());
 						return "{\"Token Id\": \"" + token.getId() + "\",\"Name\":\"" + name + "\",\"Age\":\"" + age
 								+ "\",\"Phone\":\"" + phone + "\",\"Interests\":\"" + listString + "\"}";
@@ -423,20 +422,22 @@ public class ApiController {
 		String[] interests = u.getInterests();
 		List<Video> videos = videoRepo.findAll();
 		int vidLen = videos.size();
-		int len = interests.length;
-		for (int i = 0; i < len; i++) {
-			String cur = interests[i];
-			for (int j = 0; j < vidLen; j++) {
-				Video v = videos.get(j);
-				String topic = v.getTopic();
+		if (interests != null && interests.length > 0) {
+			int len = interests.length;
+			for (int i = 0; i < len; i++) {
+				String cur = interests[i];
+				for (int j = 0; j < vidLen; j++) {
+					Video v = videos.get(j);
+					String topic = v.getTopic();
 //				List<String> tags = v.getTags();
-				if (topic != null && topic.equals(cur)) { // tags are null at the beginning
+					if (topic != null && topic.equals(cur)) { // tags are null at the beginning
 //					if (tags.contains(cur)) {
-					if (!result.contains(v.getId()) && !v.getUserId().equals(uid)) {
-						System.out.println(v.getId());
-						result.add(v.getPath());
-					}
+						if (!result.contains(v.getId()) && !v.getUserId().equals(uid)) {
+							System.out.println(v.getId());
+							result.add(v.getPath());
+						}
 //					}
+					}
 				}
 			}
 		}
@@ -696,7 +697,7 @@ public class ApiController {
 			return "{\"Error\" : \"User with this email does not exist\"}";
 		} else {
 			User user = userRepo.findByEmail(email);
-			
+
 			user.setInterests(interests.getInterests());
 			userRepo.save(user);
 			return "Successfully edited interested";

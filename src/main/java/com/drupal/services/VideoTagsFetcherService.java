@@ -82,24 +82,44 @@ public class VideoTagsFetcherService {
 		System.out.println(responseBody);
 		JSONObject jsonResponse = new JSONObject(responseBody);
 		JSONArray topic = null;
+		JSONArray gender = null;
+		JSONArray emotions = null;
+		JSONArray keywords = null;
 		try {
 		topic = jsonResponse.getJSONArray("Topic");
 		}
 		catch(Exception e) {
 			
 		}
-		JSONArray keywords = null;
 		try {
 			keywords= jsonResponse.getJSONArray("keyword");
 		}
 		catch(Exception e) {
 			
 		}
+		try {
+			gender = jsonResponse.getJSONArray("Gender");
+		}
+		catch(Exception e) {
+			
+		}
+		try {
+			emotions = jsonResponse.getJSONArray("Emotions");
+		}
+		catch(Exception e) {
+			
+		}
 		if(keywords!=null) {
-		video.setTags((List<String>)((Object)keywords.toList()));
+			video.setTags((List<String>)((Object)keywords.toList()));
 		}
 		if(topic != null) {
 			video.setTopic(topic.get(0).toString());
+		}
+		if(gender != null && gender.length()>0) {
+			video.setGender(gender.get(0).toString());
+		}
+		if(emotions != null && emotions.length()>0) {
+			video.setEmotions((List<String>)((Object)emotions.toList()));
 		}
 //		video.setTopic(topic);
 		videoRepo.save(video);
