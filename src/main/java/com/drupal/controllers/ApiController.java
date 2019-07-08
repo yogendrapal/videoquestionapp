@@ -119,10 +119,20 @@ public class ApiController {
 						String name = user.getName();
 						String age = String.valueOf(user.getAge());
 						String phone = user.getPhone();
-						String interests = user.getInterests().toString();
+						String[] interests = user.getInterests();
+						String listString = "[";
+						
+						if(interests!=null && interests.length>0) {
+							for (String s : interests)
+							{
+								listString += s + ",";
+							}
+							listString = listString.substring(0, listString.length() -1);
+						}
+						listString+="]";
 						Token token = tokenController.createToken(user.getId());
 						return "{\"Token Id\": \"" + token.getId() + "\",\"Name\":\"" + name + "\",\"Age\":\"" + age
-								+ "\",\"Phone\":\"" + phone + "\",\"Interests\":\"" + interests + "\"}";
+								+ "\",\"Phone\":\"" + phone + "\",\"Interests\":\"" + listString + "\"}";
 					} else {
 						try {
 							res.sendError(403, "Incorrect password");
